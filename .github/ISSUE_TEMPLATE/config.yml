@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: PayID Protocol Change
+    url: https://github.com/payid-org/rfcs/tree/master
+    about: Please submit an RFC here.
