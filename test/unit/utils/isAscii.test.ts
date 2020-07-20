@@ -8,7 +8,8 @@ describe('isAscii()', function (): void {
     // GIVEN an ASCII string
     const asciiString = 'johndoe'
 
-    // WHEN we see if the string is ASCII
+    // WHEN the string is determined to be ASCII
+    // THEN it is determined to be ASCII
     const isStringAscii = isAscii(asciiString)
 
     // THEN we expect to get true back
