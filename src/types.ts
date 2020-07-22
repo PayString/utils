@@ -13,7 +13,3 @@ export type PayId = string & {
 export type PayIdUrl = URL & {
   [isValidPayId]: true
 }
-
-// export class PayId {
-//   pub
-// }
