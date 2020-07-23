@@ -27,7 +27,9 @@ export function parsePayId(input: unknown): PayId {
   const host = input.slice(lastDollarIndex + 1)
 
   if (lastDollarIndex === -1 || user.length === 0 || host.length === 0) {
-    throw new Error('A PayID must have a user and a host, divided by a $ (e.g. alice$example.com).')
+    throw new Error(
+      'A PayID must have a user and a host, divided by a $ (e.g. alice$example.com).',
+    )
   }
 
   if (user.includes('/') || host.includes('/')) {
@@ -65,7 +67,9 @@ export function parsePayIdUrl(input: unknown): PayIdUrl {
 
   // Disallow namespace paths
   if (!url.hostname.includes('.')) {
-    throw new Error(`Hostname "${url.hostname}" is not a valid hostname.`)
+    throw new Error(
+      `Hostname "${url.hostname}" is not a valid hostname. Needs a dot-separated TLD.`,
+    )
   }
 
   return url as PayIdUrl

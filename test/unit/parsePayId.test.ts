@@ -60,7 +60,7 @@ describe('parsePayId()', function (): void {
     assert.throws(
       invalidParsePayId,
       Error,
-      'A PayID must have a user and a host, divided by a $.',
+      'A PayID must have a user and a host, divided by a $ (e.g. alice$example.com).',
     )
   })
 
@@ -75,7 +75,7 @@ describe('parsePayId()', function (): void {
     assert.throws(
       invalidParsePayId,
       Error,
-      'A PayID must have a user and a host, divided by a $.',
+      'A PayID must have a user and a host, divided by a $ (e.g. alice$example.com).',
     )
   })
 
@@ -90,7 +90,7 @@ describe('parsePayId()', function (): void {
     assert.throws(
       invalidParsePayId,
       Error,
-      'A PayID must have a user and a host, divided by a $.',
+      'A PayID must have a user and a host, divided by a $ (e.g. alice$example.com).',
     )
   })
 
