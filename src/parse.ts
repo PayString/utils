@@ -27,7 +27,7 @@ export function parsePayId(input: unknown): PayId {
   const host = input.slice(lastDollarIndex + 1)
 
   if (lastDollarIndex === -1 || user.length === 0 || host.length === 0) {
-    throw new Error('A PayID must have a user and a host, divided by a $.')
+    throw new Error('A PayID must have a user and a host, divided by a $ (e.g. alice$example.com).')
   }
 
   if (user.includes('/') || host.includes('/')) {
