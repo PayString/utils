@@ -1,5 +1,5 @@
 {
-  "includes": ["src/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "compileOnSave": true,
   "compilerOptions": {
     // Basic Options
