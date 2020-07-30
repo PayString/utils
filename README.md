@@ -1,6 +1,6 @@
-# `@payid-org/payid-utils`
+# `@payid-org/utils`
 
-![NPM version badge](https://img.shields.io/npm/v/@payid-org/payid-utils)
+![NPM version badge](https://img.shields.io/npm/v/@payid-org/utils)
 
 A TypeScript library providing PayID utility functions.
 

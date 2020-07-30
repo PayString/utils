@@ -3,6 +3,7 @@
  * to illustrate that things have been successfully parsed.
  */
 
+import { splitPayIdString } from './helpers'
 import type { PayId, PayIdUrl } from './types'
 
 declare const isValidPayId: unique symbol
@@ -16,21 +17,12 @@ declare const isValidPayId: unique symbol
  *
  * @throws An error if the input is an invalid PayID.
  */
-// eslint-disable-next-line max-statements -- The limit is 10 and we have 11.
 export function parsePayId(input: unknown): PayId {
   if (typeof input !== 'string') {
     throw new Error('PayIDs must be a string.')
   }
 
-  const lastDollarIndex = input.lastIndexOf('$')
-  const user = input.slice(0, lastDollarIndex)
-  const host = input.slice(lastDollarIndex + 1)
-
-  if (lastDollarIndex === -1 || user.length === 0 || host.length === 0) {
-    throw new Error(
-      'A PayID must have a user and a host, divided by a $ (e.g. alice$example.com).',
-    )
-  }
+  const [user, host] = splitPayIdString(input)
 
   if (user.includes('/') || host.includes('/')) {
     throw new Error('A PayID string representation cannot include paths.')

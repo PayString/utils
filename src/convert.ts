@@ -1,3 +1,4 @@
+import { splitPayIdString } from './helpers'
 import { parsePayId, parsePayIdUrl } from './parse'
 import type { PayIdUrl, PayId } from './types'
 
@@ -13,9 +14,7 @@ import type { PayIdUrl, PayId } from './types'
 export function convertPayIdToUrl(potentialPayId: string): PayIdUrl {
   const payId = parsePayId(potentialPayId)
 
-  const lastDollarIndex = payId.lastIndexOf('$')
-  const user = payId.slice(0, lastDollarIndex)
-  const host = payId.slice(lastDollarIndex + 1)
+  const [user, host] = splitPayIdString(payId)
 
   // TODO:(hbergren) If PayID Discovery becomes real,
   // this might need to make a fetch() request to determine how to build the PayID URL.
@@ -34,9 +33,13 @@ export function convertPayIdToUrl(potentialPayId: string): PayIdUrl {
 export function convertUrlToPayId(potentialPayIdUrl: string | URL): PayId {
   const payIdUrl = parsePayIdUrl(potentialPayIdUrl)
 
-  // Remove the leading '/' from the path
+  // Remove the leading '/' from the path.
+  //
+  // TODO:(hbergren) If PayID Discovery becomes real,
+  // this might need to make a fetch() request to determine how to parse the PayID URL.
   const user = payIdUrl.pathname.slice(1)
 
   const payId = `${user}$${payIdUrl.hostname}`
+
   return parsePayId(payId)
 }

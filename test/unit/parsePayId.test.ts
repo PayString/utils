@@ -109,7 +109,7 @@ describe('parsePayId()', function (): void {
     )
   })
 
-  it('Throws an error for a malformed PayID with a path in the ost', function () {
+  it('Throws an error for a malformed PayID with a path in the host', function () {
     // GIVEN a malformed PayID with a path in the host
     const potentialPayId = 'alice$example.com/users'
 
