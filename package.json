@@ -23,6 +23,9 @@
     "lintNoFix": "eslint . --ext .ts --max-warnings 0 && prettier --check '**/*.{md,json}'",
     "test": "nyc mocha 'test/**/*.test.ts'"
   },
+  "dependencies": {
+    "jose": "^1.27.2"
+  },
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.2",
     "@fintechstudios/eslint-plugin-chai-as-promised": "^3.0.2",
