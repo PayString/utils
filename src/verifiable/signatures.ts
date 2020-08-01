@@ -5,7 +5,6 @@ import { Address } from './payid'
 import GeneralJWS = JWS.GeneralJWS
 import ECKey = JWK.ECKey
 import RSAKey = JWK.RSAKey
-import JWSRecipient = JWS.JWSRecipient
 
 /**
  * Creates a signed JWS.
@@ -16,6 +15,25 @@ import JWSRecipient = JWS.JWSRecipient
  * @returns A signed JWS.
  */
 export default function sign(
+  payId: string,
+  address: Address,
+  signingParams: SigningParams,
+): GeneralJWS {
+  if (isServerKeySigninParams(signingParams)) {
+    return signWithServerKey(payId, address, signingParams)
+  }
+  return signWithIdentityKey(payId, address, signingParams)
+}
+
+/**
+ * Creates a signed JWS.
+ *
+ * @param payId - The payID that owns this verified address.
+ * @param address - The address to sign.
+ * @param signingParams - The key/alg to use to generate the signature.
+ * @returns A signed JWS.
+ */
+export function signWithIdentityKey(
   payId: string,
   address: Address,
   signingParams: SigningParams,
@@ -35,6 +53,39 @@ export default function sign(
     b64: false,
     crit: ['b64'],
     jwk: publicKey,
+  }
+
+  signer.recipient(signingParams.key, protectedHeaders)
+  return signer.sign('general')
+}
+
+/**
+ * Creates a signed JWS.
+ *
+ * @param payId - The payID that owns this verified address.
+ * @param address - The address to sign.
+ * @param signingParams - The key/alg to use to generate the signature.
+ * @returns A signed JWS.
+ */
+export function signWithServerKey(
+  payId: string,
+  address: Address,
+  signingParams: ServerKeySigningParams,
+): GeneralJWS {
+  const unsigned: UnsignedVerifiedAddress = {
+    payId,
+    payIdAddress: address,
+  }
+
+  const signer = new JWS.Sign(unsigned)
+
+  const protectedHeaders = {
+    name: 'serverKey',
+    alg: signingParams.alg,
+    typ: 'JOSE+JSON',
+    b64: false,
+    crit: ['b64'],
+    jwk: signingParams.x5c,
   }
 
   signer.recipient(signingParams.key, protectedHeaders)
@@ -85,46 +136,28 @@ export function verifySignedAddress(
     return false
   }
 
-  return verifiedAddress.signatures
-    .map((recipient) => verifySignature(verifiedAddress, recipient))
-    .every((value) => value)
-}
-
-function verifySignature(jws: GeneralJWS, recipient: JWSRecipient): boolean {
-  if (recipient.protected) {
-    const headers = JSON.parse(
-      Buffer.from(recipient.protected, 'base64').toString('ascii'),
-    ) as JwsHeaders
-    return verifySignatureViaHeaders(jws, headers)
-  }
-  return false
-}
-
-function verifySignatureViaHeaders(
-  jws: GeneralJWS,
-  headers: JwsHeaders,
-): boolean {
   try {
-    if (JWS.verify(jws, headers.jwk, { crit: ['b64'] })) {
-      return true
-    }
-  } catch {
-    // console.info(`signature verification failed`, error)
+    JWS.verify(verifiedAddress, JWK.EmbeddedJWK, {
+      crit: ['b64'],
+      complete: true,
+    })
+    return true
+  } catch (error) {
+    console.info(`signature verification failed`, error)
     return false
   }
   return false
 }
 
+function isServerKeySigninParams(
+  params: SigningParams,
+): params is ServerKeySigningParams {
+  return 'x5c' in params
+}
+
 interface UnsignedVerifiedAddress {
   readonly payId: string
   readonly payIdAddress: Address
-}
-
-interface JwsHeaders {
-  typ: string
-  b64: boolean
-  crit: string[]
-  jwk: JWK.Key
 }
 
 interface SigningParams {
@@ -136,6 +169,7 @@ interface SigningParams {
 export interface IdentityKeySigningParams extends SigningParams {
   keyType: 'identityKey'
 }
-// export interface ServerKeySigningParams extends SigningParams {
-//   keyType: 'serverKey'
-// }
+export interface ServerKeySigningParams extends SigningParams {
+  keyType: 'serverKey'
+  x5c: RSAKey | ECKey
+}
