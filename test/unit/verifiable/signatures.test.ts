@@ -1,19 +1,26 @@
 import 'mocha'
-import { readFileSync } from 'fs'
+import { promises } from 'fs'
 
 import { assert } from 'chai'
 import { JWK } from 'jose'
 
+import IdentityKeySigningParams from '../../../src/verifiable/identity-key-signing-params'
+import ServerKeySigningParams from '../../../src/verifiable/server-key-signing-params'
+import sign, {
+  signWithKeys,
+  signWithServerKey,
+  verifySignedAddress,
+} from '../../../src/verifiable/signatures'
 import {
   Address,
   AddressDetailsType,
   CryptoAddressDetails,
-} from '../../../src/verifiable/payid'
-import sign, {
-  IdentityKeySigningParams, ServerKeySigningParams,
-  signWithKeys, signWithServerKey,
-  verifySignedAddress,
-} from '../../../src/verifiable/signatures'
+} from '../../../src/verifiable/verifiable-payid'
+
+import ECKey = JWK.ECKey
+import RSAKey = JWK.RSAKey
+import OctKey = JWK.OctKey
+import OKPKey = JWK.OKPKey
 
 describe('signPayId()', function () {
   const KEY_SIZE = 512
@@ -36,10 +43,8 @@ describe('signPayId()', function () {
 
   it('Signed PayID returns JWS', async function () {
     const key = await JWK.generate('EC', 'secp256k1')
-    const jws = sign(payId, address, {
-      key,
-      alg: 'ES256K',
-    } as IdentityKeySigningParams)
+    const params = new IdentityKeySigningParams(key, 'ES256K')
+    const jws = sign(payId, address, params)
 
     const expectedPayload =
       '{"payId":"alice$payid.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
@@ -50,30 +55,29 @@ describe('signPayId()', function () {
   })
 
   it('sign - sign from PEM with x5c', async function () {
-    const publicKey = getPublicKeyFromCert()
-    const privateKey = getPrivateKeyFromPem()
-    const jws = signWithServerKey(payId, address, {
-      key: privateKey,
-      alg: 'RS256',
-      x5c: publicKey,
-    } as ServerKeySigningParams)
+    const publicKey = await getPublicKeyFromCert()
+    const privateKey = await getPrivateKeyFromPem()
+    const jws = signWithServerKey(
+      payId,
+      address,
+      new ServerKeySigningParams(privateKey, 'RS256', publicKey),
+    )
 
     const expectedPayload =
       '{"payId":"alice$payid.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
-
     assert.equal(jws.payload, expectedPayload)
     assert.equal(jws.signatures.length, 1)
     assert.isTrue(verifySignedAddress(payId, jws))
   })
 
   it('sign - verification fails if server key and cert dont match', async function () {
-    const publicKey = getPublicKeyFromCert()
+    const publicKey = await getPublicKeyFromCert()
     const fakeServerKey = await JWK.generate('RSA', KEY_SIZE)
-    const jws = signWithServerKey(payId, address, {
-      key: fakeServerKey,
-      alg: 'RS256',
-      x5c: publicKey,
-    } as ServerKeySigningParams)
+    const jws = signWithServerKey(
+      payId,
+      address,
+      new ServerKeySigningParams(fakeServerKey, 'RS256', publicKey),
+    )
 
     const expectedPayload =
       '{"payId":"alice$payid.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
@@ -87,15 +91,12 @@ describe('signPayId()', function () {
     const identityKey = await JWK.generate('EC', 'secp256k1')
 
     const jws = signWithKeys(payId, address, [
-      {
-        key: getPrivateKeyFromPem(),
-        alg: 'RS256',
-        x5c: getPublicKeyFromCert(),
-      } as ServerKeySigningParams,
-      {
-        key: identityKey,
-        alg: 'ES256K',
-      } as IdentityKeySigningParams,
+      new ServerKeySigningParams(
+        await getPrivateKeyFromPem(),
+        'RS256',
+        await getPublicKeyFromCert(),
+      ),
+      new IdentityKeySigningParams(identityKey, 'ES256K'),
     ])
 
     const expectedPayload =
@@ -108,32 +109,52 @@ describe('signPayId()', function () {
 
   it('verifySignedAddress - fails if payload tampered with', async function () {
     const key = await JWK.generate('EC', 'secp256k1')
-    const jws = sign(payId, address, {
-      key,
-      alg: 'ES256K',
-    } as IdentityKeySigningParams)
+    const jws = sign(
+      payId,
+      address,
+      new IdentityKeySigningParams(key, 'ES256K'),
+    )
     jws.payload = jws.payload.replace(xrpAddress, 'hackedXrpAdddress')
     assert.isFalse(verifySignedAddress(payId, jws))
   })
 
   it('verifySignedAddress - fails if payid does not match payload', async function () {
     const key = await JWK.generate('EC', 'secp256k1')
-    const jws = sign(payId, address, {
-      key,
-      alg: 'ES256K',
-    } as IdentityKeySigningParams)
+    const jws = sign(
+      payId,
+      address,
+      new IdentityKeySigningParams(key, 'ES256K'),
+    )
     assert.isFalse(verifySignedAddress('hacked$payid.example', jws))
   })
 
-  function getPrivateKeyFromPem(): JWK.Key {
-    const pem = readFileSync('test/unit/verifiable/self-signed.pem').toString(
+  /**
+   * Reads the default private key from the test pem file.
+   *
+   * @returns The JWK key for the private pem.
+   */
+  async function getPrivateKeyFromPem(): Promise<
+    RSAKey | ECKey | OKPKey | OctKey
+  > {
+    const pem = await promises.readFile(
+      'test/unit/verifiable/self-signed.pem',
       'ascii',
     )
     return JWK.asKey(pem)
   }
 
-  function getPublicKeyFromCert(): JWK.Key {
-    const cert = readFileSync('test/unit/verifiable/self-signed.cert').toString('ascii')
+  /**
+   * Reads the default public key from the test cert file.
+   *
+   * @returns The JWK key for the public cert.
+   */
+  async function getPublicKeyFromCert(): Promise<
+    RSAKey | ECKey | OKPKey | OctKey
+  > {
+    const cert = await promises.readFile(
+      'test/unit/verifiable/self-signed.cert',
+      'ascii',
+    )
     return JWK.asKey(cert)
   }
 })

@@ -1,10 +1,10 @@
 import { JWS, JWK } from 'jose'
 
-import { Address } from './payid'
+import IdentityKeySigningParams from './identity-key-signing-params'
+import ServerKeySigningParams from './server-key-signing-params'
+import { Address } from './verifiable-payid'
 
 import GeneralJWS = JWS.GeneralJWS
-import ECKey = JWK.ECKey
-import RSAKey = JWK.RSAKey
 
 /**
  * Creates a signed JWS.
@@ -17,9 +17,9 @@ import RSAKey = JWK.RSAKey
 export default function sign(
   payId: string,
   address: Address,
-  signingParams: SigningParams,
+  signingParams: IdentityKeySigningParams | ServerKeySigningParams,
 ): GeneralJWS {
-  if (isServerKeySigninParams(signingParams)) {
+  if (signingParams instanceof ServerKeySigningParams) {
     return signWithServerKey(payId, address, signingParams)
   }
   return signWithIdentityKey(payId, address, signingParams)
@@ -33,10 +33,10 @@ export default function sign(
  * @param signingParams - The key/alg to use to generate the signature.
  * @returns A signed JWS.
  */
-export function signWithIdentityKey(
+function signWithIdentityKey(
   payId: string,
   address: Address,
-  signingParams: SigningParams,
+  signingParams: IdentityKeySigningParams,
 ): GeneralJWS {
   const unsigned: UnsignedVerifiedAddress = {
     payId,
@@ -103,7 +103,7 @@ export function signWithServerKey(
 export function signWithKeys(
   payId: string,
   address: Address,
-  signingParams: SigningParams[],
+  signingParams: Array<IdentityKeySigningParams | ServerKeySigningParams>,
 ): GeneralJWS {
   // There seems to be a bug with the JOSE library when dealing with multiple signatures + unencoded payloads.
   // It should be possible to pass multiple keys during signing, but the payload gets garbled due to a bug in jose.
@@ -121,17 +121,18 @@ export function signWithKeys(
 /**
  * Verify an address is properly signed.
  *
- * @param payId - The expected payid.
+ * @param expectedPayId - The expected payid.
  * @param verifiedAddress - JWS representing a verified address.
  * @returns Returns true if any signature is invalid, returns false. Otherwise true.
  */
 export function verifySignedAddress(
-  payId: string,
+  expectedPayId: string,
   verifiedAddress: GeneralJWS,
 ): boolean {
-  const address = JSON.parse(verifiedAddress.payload) as UnsignedVerifiedAddress
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
+  const address: UnsignedVerifiedAddress = JSON.parse(verifiedAddress.payload)
 
-  if (payId !== address.payId) {
+  if (expectedPayId !== address.payId) {
     // payId does not match what was inside the signed payload
     return false
   }
@@ -142,34 +143,13 @@ export function verifySignedAddress(
       complete: true,
     })
     return true
-  } catch (error) {
-    console.info(`signature verification failed`, error)
+  } catch {
     return false
   }
   return false
 }
 
-function isServerKeySigninParams(
-  params: SigningParams,
-): params is ServerKeySigningParams {
-  return 'x5c' in params
-}
-
 interface UnsignedVerifiedAddress {
   readonly payId: string
   readonly payIdAddress: Address
-}
-
-interface SigningParams {
-  key: RSAKey | ECKey
-  alg: string
-  keyType: string
-}
-
-export interface IdentityKeySigningParams extends SigningParams {
-  keyType: 'identityKey'
-}
-export interface ServerKeySigningParams extends SigningParams {
-  keyType: 'serverKey'
-  x5c: RSAKey | ECKey
 }
