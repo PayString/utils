@@ -24,8 +24,7 @@
     "test": "nyc mocha 'test/**/*.test.ts'"
   },
   "dependencies": {
-    "jose": "^1.27.2",
-    "pem-jwk": "^2.0.0"
+    "jose": "^1.27.2"
   },
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.2",
