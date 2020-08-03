@@ -1,12 +1,13 @@
 import 'mocha'
-import { promises } from 'fs'
 
 import { assert } from 'chai'
 import { JWK } from 'jose'
 
 import IdentityKeySigningParams from '../../../src/verifiable/identity-key-signing-params'
+import getKeyFromFile from '../../../src/verifiable/keys'
 import ServerKeySigningParams from '../../../src/verifiable/server-key-signing-params'
-import sign, {
+import {
+  sign,
   signWithKeys,
   signWithServerKey,
   verifySignedAddress,
@@ -136,11 +137,7 @@ describe('signPayId()', function () {
   async function getPrivateKeyFromPem(): Promise<
     RSAKey | ECKey | OKPKey | OctKey
   > {
-    const pem = await promises.readFile(
-      'test/unit/verifiable/self-signed.pem',
-      'ascii',
-    )
-    return JWK.asKey(pem)
+    return getKeyFromFile('test/unit/verifiable/self-signed.pem')
   }
 
   /**
@@ -151,10 +148,6 @@ describe('signPayId()', function () {
   async function getPublicKeyFromCert(): Promise<
     RSAKey | ECKey | OKPKey | OctKey
   > {
-    const cert = await promises.readFile(
-      'test/unit/verifiable/self-signed.cert',
-      'ascii',
-    )
-    return JWK.asKey(cert)
+    return getKeyFromFile('test/unit/verifiable/self-signed.cert')
   }
 })

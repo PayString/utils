@@ -14,7 +14,7 @@ import GeneralJWS = JWS.GeneralJWS
  * @param signingParams - The key/alg to use to generate the signature.
  * @returns A signed JWS.
  */
-export default function sign(
+export function sign(
   payId: string,
   address: Address,
   signingParams: IdentityKeySigningParams | ServerKeySigningParams,
