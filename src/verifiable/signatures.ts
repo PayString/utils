@@ -1,13 +1,10 @@
 import { JWS, JWK } from 'jose'
 
-import CertificateChainValidator from './certificate-chain-validator'
 import IdentityKeySigningParams from './identity-key-signing-params'
 import ServerKeySigningParams from './server-key-signing-params'
 import { Address, PaymentInformation } from './verifiable-payid'
 
 import GeneralJWS = JWS.GeneralJWS
-
-export const certificateChainValidator = new CertificateChainValidator()
 
 /**
  * Creates a signed JWS.
@@ -177,7 +174,7 @@ export function verifySignedAddress(
       crit: ['b64', 'name'],
       complete: true,
     })
-    return certificateChainValidator.verifyCertificateChainJWS(jws)
+    return true
   } catch {
     return false
   }
