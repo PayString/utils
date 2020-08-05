@@ -10,8 +10,10 @@ import OKPKey = JWK.OKPKey
 
 export enum AddressDetailsType {
   CryptoAddress = 'CryptoAddressDetails',
-  FiatAddress = 'FiatAddressDetails', // Replaces AchAddressDetails
-  AchAddress = 'AchAddressDetails', // Maintain compatibility for 1.0
+  // Replaces AchAddressDetails
+  FiatAddress = 'FiatAddressDetails',
+  // Maintain compatibility for 1.0
+  AchAddress = 'AchAddressDetails',
 }
 
 /**

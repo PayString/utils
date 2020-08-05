@@ -1,6 +1,15 @@
 import { promises } from 'fs'
 
-import { BasicParameters, JWK, JWKECKey, JWKOctKey, JWKOKPKey, JWKRSAKey, JWS, KeyParameters } from 'jose'
+import {
+  BasicParameters,
+  JWK,
+  JWKECKey,
+  JWKOctKey,
+  JWKOKPKey,
+  JWKRSAKey,
+  JWS,
+  KeyParameters,
+} from 'jose'
 
 import RSAKey = JWK.RSAKey
 import ECKey = JWK.ECKey
@@ -35,16 +44,24 @@ export async function getJwkFromFile(
   path: string,
 ): Promise<JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey> {
   const content = await promises.readFile(path, 'ascii')
-  const primary = JWK.asKey(content).toJWK(false)
-  const x5c = getX5cChain(
-    splitCerts(content).map((part) => JWK.asKey(part).toJWK(false)),
-  )
+  // in the case of a fullchain cert being used, the content will contain the end certificate followed by 1
+  // or more intermediate CA certs. The end certificate (index 0) is the one to be manifested as the public key
+  // in the JWS headers. The full chain of certificates will be included in the x5c section.
+  const certs = splitCerts(content)
+  const primary = JWK.asKey(certs[0]).toJWK(false)
+  const x5c = getX5cChain(certs.map((part) => JWK.asKey(part).toJWK(false)))
   if (isX5C(primary)) {
     return { ...primary, x5c }
   }
   return primary
 }
 
+/**
+ * Extracts the JWK property from the base64 json in the protected section of a JWK recipient.
+ *
+ * @param recipient - The recipient to process.
+ * @returns The JWK if found, otherwise undefined.
+ */
 export function getJwkFromRecipient(
   recipient: JWSRecipient,
 ): JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey | undefined {
@@ -62,7 +79,14 @@ export function getJwkFromRecipient(
   return undefined
 }
 
-function splitCerts(text: string): string[] {
+/**
+ * Split of full chain certificate (which contains multiple certificate blocks) into an array
+ * of strings.
+ *
+ * @param text - Text content of the certificate chain.
+ * @returns The list of certificates.
+ */
+export function splitCerts(text: string): string[] {
   let parts: string[] = []
   let startIndex = text.indexOf(CERT_HEADER)
   let endIndex = text.indexOf(CERT_TRAILER, startIndex)
@@ -76,6 +100,12 @@ function splitCerts(text: string): string[] {
   return parts
 }
 
+/**
+ * Extracts the x5c values from a JWK.
+ *
+ * @param keys - The JWK to process.
+ * @returns Array of values from the x5c fields. Empty if it doesn't exist or is empty.
+ */
 function getX5cChain(
   keys: Array<JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey>,
 ): string[] {
@@ -87,6 +117,12 @@ function getX5cChain(
   })
 }
 
+/**
+ * Checks if the params contains is a KeyParameters with an x5c property.
+ *
+ * @param params - The value to be checked.
+ * @returns True if x5c found.
+ */
 export function isX5C(params: BasicParameters): params is KeyParameters {
   return 'x5c' in params
 }

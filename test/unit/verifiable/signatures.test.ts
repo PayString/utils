@@ -10,9 +10,11 @@ import {
 } from '../../../src/verifiable/keys'
 import ServerKeySigningParams from '../../../src/verifiable/server-key-signing-params'
 import {
+  certificateChainValidator,
   sign,
   signWithKeys,
   signWithServerKey,
+  verifyPayId,
   verifySignedAddress,
 } from '../../../src/verifiable/signatures'
 import {
@@ -26,7 +28,7 @@ import RSAKey = JWK.RSAKey
 import OctKey = JWK.OctKey
 import OKPKey = JWK.OKPKey
 
-describe('signPayId()', function () {
+describe('sign()', function () {
   const KEY_SIZE = 512
   const payId = 'alice$payid.example'
   const xrpAddress = 'rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6'
@@ -37,6 +39,7 @@ describe('signPayId()', function () {
   let address: Address
 
   beforeEach(function () {
+    certificateChainValidator.addRootCertificateFile('test/certs/root.crt')
     address = {
       environment: 'TESTNET',
       paymentNetwork: 'XRPL',
@@ -58,9 +61,9 @@ describe('signPayId()', function () {
     assert.isTrue(verifySignedAddress(payId, jws))
   })
 
-  it('sign - sign from PEM with x5c', async function () {
-    const certChain = await getServerJwk()
-    const privateKey = await getSigninKey()
+  it('can be signed using using key from PEM with x5c', async function () {
+    const certChain = await getJwkForCertChain()
+    const privateKey = await getSigningKey()
     const jws = signWithServerKey(
       payId,
       address,
@@ -74,8 +77,8 @@ describe('signPayId()', function () {
     assert.isTrue(verifySignedAddress(payId, jws))
   })
 
-  it('sign - verification fails if server key and cert dont match', async function () {
-    const certChain = await getServerJwk()
+  it('verification fails if server key and cert dont match', async function () {
+    const certChain = await getJwkForCertChain()
     const fakeServerKey = await JWK.generate('RSA', KEY_SIZE)
     const jws = signWithServerKey(
       payId,
@@ -91,10 +94,10 @@ describe('signPayId()', function () {
     assert.isFalse(verifySignedAddress(payId, jws))
   })
 
-  it('sign - supports multiple signatures', async function () {
+  it('signs and verifies with using multiple signatures', async function () {
     const identityKey = await JWK.generate('EC', 'secp256k1')
-    const x5c = await getServerJwk()
-    const serverKey = await getSigninKey()
+    const x5c = await getJwkForCertChain()
+    const serverKey = await getSigningKey()
     const jws = signWithKeys(payId, address, [
       new ServerKeySigningParams(serverKey, 'RS256', x5c),
       new IdentityKeySigningParams(identityKey, 'ES256K'),
@@ -108,7 +111,7 @@ describe('signPayId()', function () {
     assert.isTrue(verifySignedAddress(payId, jws))
   })
 
-  it('verifySignedAddress - fails if payload tampered with', async function () {
+  it('cannot be verified if payload tampered with', async function () {
     const key = await JWK.generate('EC', 'secp256k1')
     const jws = sign(
       payId,
@@ -119,7 +122,7 @@ describe('signPayId()', function () {
     assert.isFalse(verifySignedAddress(payId, jws))
   })
 
-  it('verifySignedAddress - fails if payid does not match payload', async function () {
+  it('verification fails if payid does not match payload', async function () {
     const key = await JWK.generate('EC', 'secp256k1')
     const jws = sign(
       payId,
@@ -135,15 +138,24 @@ describe('signPayId()', function () {
     assert.isTrue(verifySignedAddress('alice$payid.example', jws))
   })
 
-  it('verifySignedAddress - verifies jws from Java', async function () {
-    const jws = `{
-  "signatures" : [ {
-    "protected" : "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJraWQiOiJkMGFlNTllNi1iZDIwLTQ3NzYtOGMwMi0zYTYzMDYwYjU0NjkiLCJuYW1lIjoiaWRlbnRpdHlLZXkiLCJ0eXAiOiJKT1NFK0pTT04iLCJhbGciOiJFUzI1NksiLCJqd2siOnsia3R5IjoiRUMiLCJ1c2UiOiJzaWciLCJjcnYiOiJzZWNwMjU2azEiLCJraWQiOiJkMGFlNTllNi1iZDIwLTQ3NzYtOGMwMi0zYTYzMDYwYjU0NjkiLCJ4IjoiWkMzZDdzRS1BdDE2cEpBMUZ0bFg4dXJ3UWx3LWlUYW43M3RrazluZFo0VSIsInkiOiJBaUlab2tyU05qd2tYZ0FVNmJCY3Nrbnd1WFAyNGkycUdvU3EwZmU5Z09vIiwiYWxnIjoiRVMyNTZLIn19",
-    "signature" : "AxpRFkNnymCFrOLPGsVBtJ3Re7oMhDKHEWLTlYyre0HKpfGJdEDzFDGKtud3dJUOL67A-IyKZMKT8MQSzDUeeg"
-  } ],
-  "payload" : "{\\"payId\\":\\"alice$foo\\",\\"payIdAddress\\":{\\"paymentNetwork\\":\\"XRPL\\",\\"environment\\":\\"TESTNET\\",\\"addressDetailsType\\":\\"CryptoAddressDetails\\",\\"addressDetails\\":{\\"address\\":\\"123\\",\\"tag\\":\\"\\"}}}"
-} `
-    assert.isTrue(verifySignedAddress('alice$foo', jws))
+  it('PayID with verifiedAddresses can be verified if valid', async function () {
+    const json = `    
+{
+  "payId": "alice$foo",
+  "addresses": [],
+  "verifiedAddresses": [
+    {
+      "signatures" : [ 
+        {
+          "protected" : "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJraWQiOiJkMGFlNTllNi1iZDIwLTQ3NzYtOGMwMi0zYTYzMDYwYjU0NjkiLCJuYW1lIjoiaWRlbnRpdHlLZXkiLCJ0eXAiOiJKT1NFK0pTT04iLCJhbGciOiJFUzI1NksiLCJqd2siOnsia3R5IjoiRUMiLCJ1c2UiOiJzaWciLCJjcnYiOiJzZWNwMjU2azEiLCJraWQiOiJkMGFlNTllNi1iZDIwLTQ3NzYtOGMwMi0zYTYzMDYwYjU0NjkiLCJ4IjoiWkMzZDdzRS1BdDE2cEpBMUZ0bFg4dXJ3UWx3LWlUYW43M3RrazluZFo0VSIsInkiOiJBaUlab2tyU05qd2tYZ0FVNmJCY3Nrbnd1WFAyNGkycUdvU3EwZmU5Z09vIiwiYWxnIjoiRVMyNTZLIn19",
+          "signature" : "AxpRFkNnymCFrOLPGsVBtJ3Re7oMhDKHEWLTlYyre0HKpfGJdEDzFDGKtud3dJUOL67A-IyKZMKT8MQSzDUeeg"
+        } 
+      ],
+      "payload" : "{\\"payId\\":\\"alice$foo\\",\\"payIdAddress\\":{\\"paymentNetwork\\":\\"XRPL\\",\\"environment\\":\\"TESTNET\\",\\"addressDetailsType\\":\\"CryptoAddressDetails\\",\\"addressDetails\\":{\\"address\\":\\"123\\",\\"tag\\":\\"\\"}}}"
+    }
+  ]  
+}`
+    assert.isTrue(verifyPayId(json))
   })
 
   /**
@@ -151,8 +163,8 @@ describe('signPayId()', function () {
    *
    * @returns The JWK key for the private pem.
    */
-  async function getSigninKey(): Promise<RSAKey | ECKey | OKPKey | OctKey> {
-    return getSigningKeyFromFile('test/unit/verifiable/privkey.pem')
+  async function getSigningKey(): Promise<RSAKey | ECKey | OKPKey | OctKey> {
+    return getSigningKeyFromFile('test/certs/server.key')
   }
 
   /**
@@ -160,9 +172,9 @@ describe('signPayId()', function () {
    *
    * @returns The JWK key for the public cert.
    */
-  async function getServerJwk(): Promise<
+  async function getJwkForCertChain(): Promise<
     JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey
   > {
-    return getJwkFromFile('test/unit/verifiable/fullchain.pem')
+    return getJwkFromFile('test/certs/server.fullchain.crt')
   }
 })
