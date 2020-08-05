@@ -54,7 +54,7 @@ function signWithIdentityKey(
     alg: signingParams.alg,
     typ: 'JOSE+JSON',
     b64: false,
-    crit: ['b64'],
+    crit: ['b64', 'name'],
     jwk,
   }
 
@@ -87,7 +87,7 @@ export function signWithServerKey(
     alg: signingParams.alg,
     typ: 'JOSE+JSON',
     b64: false,
-    crit: ['b64'],
+    crit: ['b64', 'name'],
     jwk: signingParams.jwk,
   }
 
@@ -174,7 +174,7 @@ export function verifySignedAddress(
   try {
     // verifies signatures
     JWS.verify(jws, JWK.EmbeddedJWK, {
-      crit: ['b64'],
+      crit: ['b64', 'name'],
       complete: true,
     })
     return certificateChainValidator.verifyCertificateChainJWS(jws)
