@@ -10,6 +10,7 @@ import {
 } from '../../../src/verifiable/keys'
 import ServerKeySigningParams from '../../../src/verifiable/server-key-signing-params'
 import {
+  certificateChainValidator,
   sign,
   signWithKeys,
   signWithServerKey,
@@ -38,6 +39,7 @@ describe('sign()', function () {
   let address: Address
 
   beforeEach(function () {
+    certificateChainValidator.addRootCertificateFile('test/certs/root.crt')
     address = {
       environment: 'TESTNET',
       paymentNetwork: 'XRPL',
