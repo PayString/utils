@@ -1,10 +1,14 @@
 import { JWS, JWK } from 'jose'
 
 import IdentityKeySigningParams from './identity-key-signing-params'
+import CertificateValidator from './pki'
 import ServerKeySigningParams from './server-key-signing-params'
-import { Address } from './verifiable-payid'
+import { Address, PaymentInformation } from './verifiable-payid'
 
 import GeneralJWS = JWS.GeneralJWS
+
+const pkiValidator = new CertificateValidator()
+pkiValidator.importCAsNodeRoot()
 
 /**
  * Creates a signed JWS.
@@ -44,7 +48,7 @@ function signWithIdentityKey(
   }
 
   const signer = new JWS.Sign(unsigned)
-  const publicKey = signingParams.key.toJWK(false)
+  const jwk = signingParams.key.toJWK(false)
 
   const protectedHeaders = {
     name: 'identityKey',
@@ -52,7 +56,7 @@ function signWithIdentityKey(
     typ: 'JOSE+JSON',
     b64: false,
     crit: ['b64'],
-    jwk: publicKey,
+    jwk,
   }
 
   signer.recipient(signingParams.key, protectedHeaders)
@@ -85,7 +89,7 @@ export function signWithServerKey(
     typ: 'JOSE+JSON',
     b64: false,
     crit: ['b64'],
-    jwk: signingParams.x5c,
+    jwk: signingParams.jwk,
   }
 
   signer.recipient(signingParams.key, protectedHeaders)
@@ -118,6 +122,21 @@ export function signWithKeys(
     })
 }
 
+export function verifyPayId(toVerify: string | PaymentInformation): boolean {
+  const paymentInformation: PaymentInformation =
+    typeof toVerify === 'string'
+      ? (JSON.parse(toVerify) as PaymentInformation)
+      : toVerify
+
+  const payId = paymentInformation.payId
+  if (payId) {
+    return paymentInformation.verifiedAddresses
+      .map((address) => verifySignedAddress(payId, address as GeneralJWS))
+      .every((value) => value)
+  }
+  return false
+}
+
 /**
  * Verify an address is properly signed.
  *
@@ -127,10 +146,14 @@ export function signWithKeys(
  */
 export function verifySignedAddress(
   expectedPayId: string,
-  verifiedAddress: GeneralJWS,
+  verifiedAddress: GeneralJWS | string,
 ): boolean {
+  const jws: GeneralJWS =
+    typeof verifiedAddress === 'string'
+      ? (JSON.parse(verifiedAddress) as GeneralJWS)
+      : verifiedAddress
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
-  const address: UnsignedVerifiedAddress = JSON.parse(verifiedAddress.payload)
+  const address: UnsignedVerifiedAddress = JSON.parse(jws.payload)
 
   if (expectedPayId !== address.payId) {
     // payId does not match what was inside the signed payload
@@ -138,12 +161,14 @@ export function verifySignedAddress(
   }
 
   try {
-    JWS.verify(verifiedAddress, JWK.EmbeddedJWK, {
+    // verifies signatures
+    JWS.verify(jws, JWK.EmbeddedJWK, {
       crit: ['b64'],
       complete: true,
     })
-    return true
-  } catch {
+    return pkiValidator.verifyCertificateChain(jws)
+  } catch (error) {
+    console.log(error)
     return false
   }
   return false
