@@ -38,8 +38,8 @@ export interface FiatAddressDetails {
  */
 export interface PaymentInformation {
   readonly payId?: string
-  readonly addresses: Address[]
-  readonly verifiedAddresses: VerifiedAddress[]
+  addresses: Address[]
+  verifiedAddresses: VerifiedAddress[]
   readonly memo?: string
 }
 
