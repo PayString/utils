@@ -1,9 +1,5 @@
 import Command from './Command';
-import {
-  IdentityKeySigningParams,
-  ServerKeySigningParams,
-  signWithKeys
-} from '../verifiable'
+import { IdentityKeySigningParams, ServerKeySigningParams, signWithKeys } from '../verifiable'
 import { VerifiedAddress } from '../verifiable/verifiable-payid'
 import { JWK } from 'jose'
 
@@ -17,6 +13,10 @@ export default class SignPayIdCommand extends Command {
       return
     }
     const signingKeys = this.getSigningKeys()
+    if (signingKeys.length === 0) {
+      this.vorpal.log(`you must generate or load a key before signing`)
+      return
+    }
 
     info.verifiedAddresses = info.addresses.map(address => {
       const jws = signWithKeys(payId, address, signingKeys)
@@ -25,8 +25,10 @@ export default class SignPayIdCommand extends Command {
         signatures: jws.signatures
       }
     })
+    info.addresses = []
+
     this.localStorage.setItem('payid', info)
-    this.vorpal.log(JSON.stringify(info, null, 2))
+    this.prettyLog(info)
   }
 
   private getSigningKeys(): Array<IdentityKeySigningParams | ServerKeySigningParams> {
@@ -35,15 +37,24 @@ export default class SignPayIdCommand extends Command {
     const serverCert = this.localStorage.getItem('server-cert')
     const identityKey = this.localStorage.getItem('identity-key')
     if (serverKey && serverCert) {
-      console.log(JSON.stringify(serverKey))
-      console.log(JSON.stringify(serverCert))
-      params = params.concat(new ServerKeySigningParams(serverKey, 'RS256', serverCert))
+      params = params.concat(new ServerKeySigningParams(
+        JWK.asKey(serverKey),
+        this.getAlgorithm(serverKey),
+        serverCert))
     }
     if (identityKey) {
-      console.log(JSON.stringify(identityKey))
-      params = params.concat(new IdentityKeySigningParams(JWK.asKey(identityKey), 'ES256K'))
+      params = params.concat(new IdentityKeySigningParams(
+        JWK.asKey(identityKey),
+        this.getAlgorithm(identityKey)))
     }
     return params
+  }
+
+  private getAlgorithm(jwk: JWK.RSAKey | JWK.ECKey): string {
+    if (jwk.kty === 'EC') {
+      return 'ES256K'
+    }
+    return 'RS512'
   }
 
   command(): string {
@@ -51,6 +62,6 @@ export default class SignPayIdCommand extends Command {
   }
 
   description(): string {
-    return 'sign payid'
+    return 'sign the loaded PayID with the loaded signing keys'
   }
 }

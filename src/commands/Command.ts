@@ -3,6 +3,8 @@ import { Args } from 'vorpal'
 import LocalStorage from './localstorage'
 import { PaymentInformation } from '../verifiable'
 
+const { jsonBeautify } = require('beautify-json')
+
 abstract class Command {
 
   protected readonly localStorage: LocalStorage
@@ -33,6 +35,11 @@ abstract class Command {
       throw new Error(`please run 'payid init' or 'payid load' before adding an address`)
     }
     return info
+  }
+
+  prettyLog(value: any) {
+    jsonBeautify(value)
+    //this.vorpal.log(nodeutil.inspect(value, { colors: true, depth: 10 }))
   }
 
   abstract command(): string

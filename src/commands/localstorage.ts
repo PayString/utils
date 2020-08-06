@@ -30,10 +30,4 @@ export default class LocalStorage {
     return this.vorpal.localStorage.removeItem(key)
   }
 
-  public clear() {
-    this.removeItem('payid')
-    this.removeItem('identity-key')
-    this.removeItem('server-key')
-    this.removeItem('server-cert')
-  }
 }

@@ -22,7 +22,7 @@ export default class LoadServerKeyCommand extends Command {
   }
 
   description(): string {
-    return 'loads server key and certificate from files'
+    return 'loads server key and certificate from file'
   }
 
 }

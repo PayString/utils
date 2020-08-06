@@ -7,6 +7,7 @@ import * as forge from 'node-forge'
 import { getJwkFromRecipient, isX5C } from './keys'
 
 import certificateFromPem = forge.pki.certificateFromPem
+import { ProtectedHeaders } from './signatures'
 
 /**
  * Service to validate the certificate chain (using web PKI) for Verifiable PayIDs
@@ -39,7 +40,13 @@ export default class CertificateChainValidator {
    * @returns True if verified.
    */
   public verifyCertificateChainRecipient(recipient: JWS.JWSRecipient): boolean {
-    return this.verifyCertificateChain(extractX5CCertificates(recipient))
+    if (!recipient.protected) return false
+    const headers: ProtectedHeaders =
+      JSON.parse(Buffer.from(recipient.protected, 'base64').toString('utf-8'))
+    if (headers.name === 'serverKey') {
+      return this.verifyCertificateChain(extractX5CCertificates(recipient))
+    }
+    return true
   }
 
   /**
@@ -49,9 +56,6 @@ export default class CertificateChainValidator {
    * @returns True if verified.
    */
   public verifyCertificateChain(chain: forge.pki.Certificate[]): boolean {
-    if (chain.length === 0) {
-      return true
-    }
     try {
       return forge.pki.verifyCertificateChain(this.caStore, chain)
     } catch {

@@ -82,7 +82,7 @@ export function signWithServerKey(
 
   const signer = new JWS.Sign(unsigned)
 
-  const protectedHeaders = {
+  const protectedHeaders: ProtectedHeaders = {
     name: 'serverKey',
     alg: signingParams.alg,
     typ: 'JOSE+JSON',
@@ -189,4 +189,13 @@ export function verifySignedAddress(
 interface UnsignedVerifiedAddress {
   readonly payId: string
   readonly payIdAddress: Address
+}
+
+export interface ProtectedHeaders {
+  name: string
+  alg: string
+  typ: 'JOSE+JSON'
+  b64: false,
+  crit: ['b64', 'name'],
+  jwk: JsonWebKey
 }

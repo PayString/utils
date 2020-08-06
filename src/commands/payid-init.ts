@@ -12,7 +12,7 @@ export default class BuildPayIdCommand extends Command {
       verifiedAddresses: [],
     }
     this.localStorage.setItem('payid', info)
-    this.vorpal.log(JSON.stringify(info, null, 2))
+    this.prettyLog(info)
   }
 
   command(): string {

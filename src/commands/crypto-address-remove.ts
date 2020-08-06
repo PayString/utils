@@ -18,7 +18,7 @@ export default class RemoveCryptoAddressCommand extends Command {
     }
     info.addresses.splice(info.addresses.indexOf(toRemove), 1)
     this.localStorage.setItem('payid', info)
-    this.vorpal.log(JSON.stringify(info, null, 2))
+    this.prettyLog(info)
   }
 
   command(): string {
@@ -26,7 +26,7 @@ export default class RemoveCryptoAddressCommand extends Command {
   }
 
   description(): string {
-    return 'remove an address from the current payid'
+    return 'remove an address from the current PayID'
   }
 
 }
