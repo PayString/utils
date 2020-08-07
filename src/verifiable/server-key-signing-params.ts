@@ -1,4 +1,4 @@
-import { JWK } from 'jose'
+import { JWK, JWKECKey, JWKOctKey, JWKOKPKey, JWKRSAKey } from 'jose'
 
 import { SigningParams } from './verifiable-payid'
 
@@ -14,22 +14,22 @@ export default class ServerKeySigningParams implements SigningParams {
   public readonly keyType = 'serverKey'
   public readonly key: ECKey | RSAKey | OctKey | OKPKey
   public readonly alg: string
-  public readonly x5c: ECKey | RSAKey | OctKey | OKPKey
+  public readonly jwk: JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey
 
   /**
    * Default constructor.
    *
    * @param key - The private key to sign with.
    * @param alg - The signing algorithm.
-   * @param x5c - The public x509 certificate.
+   * @param jwk - The public jwk to include in the jws.
    */
   public constructor(
     key: ECKey | RSAKey | OctKey | OKPKey,
     alg: string,
-    x5c: ECKey | RSAKey | OctKey | OKPKey,
+    jwk: JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey,
   ) {
     this.key = key
     this.alg = alg
-    this.x5c = x5c
+    this.jwk = jwk
   }
 }

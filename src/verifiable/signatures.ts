@@ -2,7 +2,7 @@ import { JWS, JWK } from 'jose'
 
 import IdentityKeySigningParams from './identity-key-signing-params'
 import ServerKeySigningParams from './server-key-signing-params'
-import { Address } from './verifiable-payid'
+import { Address, PaymentInformation } from './verifiable-payid'
 
 import GeneralJWS = JWS.GeneralJWS
 
@@ -44,15 +44,15 @@ function signWithIdentityKey(
   }
 
   const signer = new JWS.Sign(unsigned)
-  const publicKey = signingParams.key.toJWK(false)
+  const jwk = signingParams.key.toJWK(false)
 
   const protectedHeaders = {
     name: 'identityKey',
     alg: signingParams.alg,
     typ: 'JOSE+JSON',
     b64: false,
-    crit: ['b64'],
-    jwk: publicKey,
+    crit: ['b64', 'name'],
+    jwk,
   }
 
   signer.recipient(signingParams.key, protectedHeaders)
@@ -84,8 +84,8 @@ export function signWithServerKey(
     alg: signingParams.alg,
     typ: 'JOSE+JSON',
     b64: false,
-    crit: ['b64'],
-    jwk: signingParams.x5c,
+    crit: ['b64', 'name'],
+    jwk: signingParams.jwk,
   }
 
   signer.recipient(signingParams.key, protectedHeaders)
@@ -119,6 +119,32 @@ export function signWithKeys(
 }
 
 /**
+ * Verifies a PayID using the verified addresses within the PayID.
+ *
+ * @param toVerify - The PayID (as a json or as a parsed PaymentInformation).
+ *
+ * @returns True if verified.
+ */
+export function verifyPayId(toVerify: string | PaymentInformation): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
+  const paymentInformation: PaymentInformation =
+    typeof toVerify === 'string' ? JSON.parse(toVerify) : toVerify
+
+  const payId = paymentInformation.payId
+  if (payId) {
+    return paymentInformation.verifiedAddresses
+      .map((address) =>
+        verifySignedAddress(payId, {
+          payload: address.payload,
+          signatures: address.signatures.slice(),
+        }),
+      )
+      .every((value) => value)
+  }
+  return false
+}
+
+/**
  * Verify an address is properly signed.
  *
  * @param expectedPayId - The expected payid.
@@ -127,10 +153,15 @@ export function signWithKeys(
  */
 export function verifySignedAddress(
   expectedPayId: string,
-  verifiedAddress: GeneralJWS,
+  verifiedAddress: GeneralJWS | string,
 ): boolean {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
-  const address: UnsignedVerifiedAddress = JSON.parse(verifiedAddress.payload)
+  const jws: GeneralJWS =
+    typeof verifiedAddress === 'string'
+      ? JSON.parse(verifiedAddress)
+      : verifiedAddress
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
+  const address: UnsignedVerifiedAddress = JSON.parse(jws.payload)
 
   if (expectedPayId !== address.payId) {
     // payId does not match what was inside the signed payload
@@ -138,8 +169,9 @@ export function verifySignedAddress(
   }
 
   try {
-    JWS.verify(verifiedAddress, JWK.EmbeddedJWK, {
-      crit: ['b64'],
+    // verifies signatures
+    JWS.verify(jws, JWK.EmbeddedJWK, {
+      crit: ['b64', 'name'],
       complete: true,
     })
     return true
