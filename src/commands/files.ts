@@ -12,3 +12,7 @@ export async function writeFile(filename: string, data: string, index = 0): Prom
       }
     })
 }
+
+export async function overwriteFile(filename: string, data: string): Promise<void> {
+  return await promises.writeFile(filename, data)
+}

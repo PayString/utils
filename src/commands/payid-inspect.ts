@@ -47,5 +47,5 @@ export default class InspectPayIdCommand extends Command {
 }
 
 function validString(valid: boolean) {
-  return `${valid ? 'is' : 'is NOT'} valid`
+  return `${valid ? 'is' : 'is NOT'} verified`
 }

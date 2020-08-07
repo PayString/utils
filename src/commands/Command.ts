@@ -37,7 +37,7 @@ abstract class Command {
     return info
   }
 
-  prettyLog(value: any) {
+  logJson(value: any) {
     jsonBeautify(value)
   }
 

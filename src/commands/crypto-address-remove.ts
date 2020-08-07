@@ -18,7 +18,7 @@ export default class RemoveCryptoAddressCommand extends Command {
     }
     info.addresses.splice(info.addresses.indexOf(toRemove), 1)
     this.localStorage.setItem('payid', info)
-    this.prettyLog(info)
+    this.logJson(info)
   }
 
   command(): string {

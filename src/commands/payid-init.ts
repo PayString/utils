@@ -12,7 +12,7 @@ export default class InitPayIdCommand extends Command {
       verifiedAddresses: [],
     }
     this.localStorage.setItem('payid', info)
-    this.prettyLog(info)
+    this.logJson(info)
   }
 
   command(): string {

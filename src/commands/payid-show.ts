@@ -4,7 +4,7 @@ export default class ShowPayIdCommand extends Command {
 
   async action() {
     const info = this.getPaymentInfo()
-    this.prettyLog(info)
+    this.logJson(info)
   }
 
   command(): string {

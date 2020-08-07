@@ -1,4 +1,5 @@
 import Command from './Command';
+// import { JWK } from 'jose'
 
 export default class ListKeysCommand extends Command {
 
@@ -10,11 +11,12 @@ export default class ListKeysCommand extends Command {
 
   private printKey(type: string) {
     const key = this.localStorage.getItem(type)
+    // const jwk = JWK.asKey(key)
     if (key) {
       if (key.kty === 'RSA') {
-        this.vorpal.log(`${type}: type=${key.kty}, thumbprint=${key.thumbprint}`)
+        this.vorpal.log(`${type}: type=${key.kty}, id=${key.kid}`)
       } else {
-        this.vorpal.log(`${type}: type=${key.kty}, type=${key.crv}, thumbprint=${key.thumbprint}`)
+        this.vorpal.log(`${type}: type=${key.kty}, type=${key.crv}, id=${key.kid}`)
       }
     }
   }

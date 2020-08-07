@@ -26,7 +26,7 @@ export default class SignPayIdCommand extends Command {
       }
     })
     this.localStorage.setItem('payid', info)
-    this.prettyLog(info)
+    this.logJson(info)
   }
 
   private getSigningKeys(): Array<IdentityKeySigningParams | ServerKeySigningParams> {

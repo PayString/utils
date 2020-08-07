@@ -24,7 +24,7 @@ export default class LoadPayIdCommand extends Command {
         }
         const info: PaymentInformation = response.data
         this.localStorage.setItem('payid', info)
-        this.prettyLog(info)
+        this.logJson(info)
       })
   }
 

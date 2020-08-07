@@ -11,7 +11,7 @@ export default class VerifyPayIdCommand extends Command {
         return JSON.parse(address.payload).payIdAddress as Address
       })
       copy.verifiedAddresses = []
-      this.prettyLog(copy)
+      this.logJson(copy)
       this.vorpal.log(`Successfully verified ${copy.payId}`)
     } else {
       this.vorpal.log(`Failed to verify ${copy.payId}`)

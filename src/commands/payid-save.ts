@@ -1,5 +1,5 @@
 import Command from './Command';
-import { writeFile } from './files'
+import { overwriteFile } from './files'
 import { splitPayIdString } from '../helpers'
 
 export default class SavePayIdCommand extends Command {
@@ -8,7 +8,7 @@ export default class SavePayIdCommand extends Command {
     const info = this.getPaymentInfo()
     if (info.payId) {
       const userHost = splitPayIdString(info.payId)
-      const filename = await writeFile(`${userHost[0]}.json`, JSON.stringify(info, null, 2))
+      const filename = await overwriteFile(`${userHost[0]}.json`, JSON.stringify(info, null, 2))
       this.vorpal.log(`Saved to ${filename}`)
     } else {
       this.vorpal.log(`missing payID`)

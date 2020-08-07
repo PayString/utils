@@ -19,7 +19,7 @@ export default class AddCryptoAddressCommand extends Command {
     info.addresses = info.addresses.concat(address)
 
     this.localStorage.setItem('payid', info)
-    this.prettyLog(info)
+    this.logJson(info)
   }
 
   command(): string {
