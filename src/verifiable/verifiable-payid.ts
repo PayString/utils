@@ -1,13 +1,14 @@
 /**
  * Type of payment address in PaymentInformation.
  */
-import { JWK, JWKECKey, JWKOctKey, JWKOKPKey, JWKRSAKey } from 'jose'
+import { JWK } from 'jose'
 
 import ECKey = JWK.ECKey
 import RSAKey = JWK.RSAKey
 import OctKey = JWK.OctKey
 import OKPKey = JWK.OKPKey
 
+// TODO:(@nhartner) pull most these types from an external PayID types library once it exists
 export enum AddressDetailsType {
   CryptoAddress = 'CryptoAddressDetails',
   // Replaces AchAddressDetails
@@ -37,9 +38,9 @@ export interface FiatAddressDetails {
  * case of a GET request to the base path /).
  */
 export interface PaymentInformation {
-  readonly payId: string
-  addresses: Address[]
-  verifiedAddresses: VerifiedAddress[]
+  readonly payId?: string
+  readonly addresses: Address[]
+  readonly verifiedAddresses: VerifiedAddress[]
   readonly memo?: string
 }
 
@@ -69,22 +70,8 @@ export interface VerifiedAddressSignature {
   signature: string
 }
 
-export interface UnsignedVerifiedAddress {
-  readonly payId: string
-  readonly payIdAddress: Address
-}
-
 export interface SigningParams {
   readonly key: ECKey | RSAKey | OctKey | OKPKey
   readonly alg: string
   keyType: string
-}
-
-export interface ProtectedHeaders {
-  name: string
-  alg: string
-  typ: 'JOSE+JSON'
-  b64: false
-  crit: ['b64', 'name']
-  jwk: JWKECKey | JWKRSAKey | JWKOKPKey | JWKOctKey
 }

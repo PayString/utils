@@ -1,15 +1,13 @@
 import { JWS, JWK } from 'jose'
 
+import CertificateChainValidator from './certificate-chain-validator'
 import IdentityKeySigningParams from './identity-key-signing-params'
 import ServerKeySigningParams from './server-key-signing-params'
-import {
-  Address,
-  PaymentInformation,
-  ProtectedHeaders,
-  UnsignedVerifiedAddress,
-} from './verifiable-payid'
+import { Address, PaymentInformation } from './verifiable-payid'
 
 import GeneralJWS = JWS.GeneralJWS
+
+export const certificateChainValidator = new CertificateChainValidator()
 
 /**
  * Creates a signed JWS.
@@ -84,7 +82,7 @@ export function signWithServerKey(
 
   const signer = new JWS.Sign(unsigned)
 
-  const protectedHeaders: ProtectedHeaders = {
+  const protectedHeaders = {
     name: 'serverKey',
     alg: signingParams.alg,
     typ: 'JOSE+JSON',
@@ -154,11 +152,13 @@ export function verifyPayId(toVerify: string | PaymentInformation): boolean {
  *
  * @param expectedPayId - The expected payid.
  * @param verifiedAddress - JWS representing a verified address.
+ * @param checkCertificateChain - Flag to enable/disable validation of x5c certificate chain.
  * @returns Returns true if any signature is invalid, returns false. Otherwise true.
  */
 export function verifySignedAddress(
   expectedPayId: string,
   verifiedAddress: GeneralJWS | string,
+  checkCertificateChain = true,
 ): boolean {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
   const jws: GeneralJWS =
@@ -176,8 +176,17 @@ export function verifySignedAddress(
       crit: ['b64', 'name'],
       complete: true,
     })
+    if (checkCertificateChain) {
+      return certificateChainValidator.verifyCertificateChainJWS(jws)
+    }
     return true
   } catch {
     return false
   }
+  return false
+}
+
+interface UnsignedVerifiedAddress {
+  readonly payId: string
+  readonly payIdAddress: Address
 }
