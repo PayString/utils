@@ -3,7 +3,7 @@ import * as Vorpal from 'vorpal'
 import Command from './Command';
 import { PaymentInformation } from '../verifiable'
 
-export default class BuildPayIdCommand extends Command {
+export default class InitPayIdCommand extends Command {
 
   async action(args: Vorpal.Args) {
     const info: PaymentInformation = {

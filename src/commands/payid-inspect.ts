@@ -1,65 +1,39 @@
 import Command from './Command';
-import {
-  Address,
-  CertificateChainValidator,
-  ProtectedHeaders,
-  verifySignedAddress
-} from '../verifiable'
-import { JWK, JWS } from 'jose'
-import GeneralJWS = JWS.GeneralJWS
+import { PaymentInformationInspector } from '../verifiable'
 import * as Vorpal from 'vorpal'
 import LocalStorage from './localstorage'
-import { extractX5CCertificates } from '../verifiable/certificate-chain-validator'
-import { KeyObject } from "crypto"
 
 export default class InspectPayIdCommand extends Command {
 
-  readonly validator: CertificateChainValidator
+  readonly paymentInformationInspector: PaymentInformationInspector
 
   constructor(vorpal: Vorpal, localStorage: LocalStorage) {
     super(vorpal, localStorage)
-    this.validator = new CertificateChainValidator()
+    this.paymentInformationInspector = new PaymentInformationInspector()
   }
 
   async action() {
     const info = this.getPaymentInfo()
-    const payId = info.payId
-    if (!payId) {
-      this.vorpal.log('missing payid')
-      return
-    }
-    info.verifiedAddresses.forEach(verifiedAddress => {
-      const address = JSON.parse(verifiedAddress.payload).payIdAddress as Address
+    const result = this.paymentInformationInspector.inspect(info)
+    this.vorpal.log(`${info.payId} ${validString(result.isVerified)}`)
+    result.verifiedAddressesResults.forEach(addressResult => {
+      const address = addressResult.address
       const cryptoAddress = ('address' in address.addressDetails) ? address.addressDetails.address : ''
       this.vorpal.log(`Found verified ${address.paymentNetwork} ${address.environment} address ${cryptoAddress}`)
-      this.vorpal.log(`- Signed with ${verifiedAddress.signatures.length} signature(s)`)
-      verifiedAddress.signatures.forEach((recipient, rIndex) => {
-        const headers: ProtectedHeaders =
-          JSON.parse(Buffer.from(recipient.protected, 'base64').toString('utf-8'))
-        const jwsWithSingleSignature = <GeneralJWS>{
-          payload: verifiedAddress.payload,
-          signatures: [
-            {
-              signature: recipient.signature,
-              protected: recipient.protected,
-            }
-          ]
+      this.vorpal.log(`- Signed with ${addressResult.signaturesResults.length} signature(s)`)
+      addressResult.signaturesResults.forEach((signatureResult, sigIndex) => {
+        this.vorpal.log(`- Signature ${sigIndex+1} ${validString(signatureResult.isSignatureValid)}`)
+        if (signatureResult.jwk) {
+          const thumbprint = signatureResult.jwk.thumbprint
+          this.vorpal.log(`  - Signed with ${signatureResult.jwk.kty} ${signatureResult.keyType} with thumbprint ${thumbprint}`)
         }
-        const jwk = JWK.asKey(headers.jwk as KeyObject)
-        this.vorpal.log(`- Signature ${rIndex+1} is a ${jwk.kty} ${headers.name}`)
-        const validSignature = verifySignedAddress(payId, jwsWithSingleSignature, false)
-        this.vorpal.log(`  - Signature ${validSignature ? 'is' : 'is NOT '} valid`)
-        if (headers.name === 'serverKey') {
-          const validChain = this.validator.verifyCertificateChainJWS(jwsWithSingleSignature)
-          this.vorpal.log(`  - Certificate chain ${validChain ? 'is' : 'is NOT '} valid`)
-          extractX5CCertificates(recipient).forEach((cert, cIndex) => {
-            const owner = cert.subject.getField('CN').value
-            const issuedBy = cert.issuer.getField('CN').value
-            this.vorpal.log(`     - Certificate ${cIndex + 1} for ${owner}, issued by ${issuedBy}`)
+        if (signatureResult.certificateChainResult) {
+          this.vorpal.log(`  - Certificate chain ${validString(signatureResult.certificateChainResult.isChainValid)}`)
+          signatureResult.certificateChainResult.certificateResults.forEach((chainResult, chainIndex) => {
+            this.vorpal.log(`     - Certificate ${chainIndex + 1} for ${chainResult.issuedTo}, issued by ${chainResult.issuedBy}`)
           })
         }
       })
-      this.vorpal.log('')
     })
   }
 
@@ -70,4 +44,8 @@ export default class InspectPayIdCommand extends Command {
   description(): string {
     return 'Inspect signatures on the loaded PayID'
   }
+}
+
+function validString(valid: boolean) {
+  return `${valid ? 'is' : 'is NOT'} valid`
 }

@@ -39,7 +39,6 @@ abstract class Command {
 
   prettyLog(value: any) {
     jsonBeautify(value)
-    //this.vorpal.log(nodeutil.inspect(value, { colors: true, depth: 10 }))
   }
 
   abstract command(): string

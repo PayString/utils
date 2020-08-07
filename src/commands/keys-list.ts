@@ -12,9 +12,9 @@ export default class ListKeysCommand extends Command {
     const key = this.localStorage.getItem(type)
     if (key) {
       if (key.kty === 'RSA') {
-        this.vorpal.log(`${type}: type=${key.kty}, kid=${key.kid}`)
+        this.vorpal.log(`${type}: type=${key.kty}, thumbprint=${key.thumbprint}`)
       } else {
-        this.vorpal.log(`${type}: type=${key.kty}, type=${key.crv}, kid=${key.kid}`)
+        this.vorpal.log(`${type}: type=${key.kty}, type=${key.crv}, thumbprint=${key.thumbprint}`)
       }
     }
   }

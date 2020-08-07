@@ -56,6 +56,7 @@ export default class CertificateChainValidator {
    * @returns True if verified.
    */
   public verifyCertificateChain(chain: forge.pki.Certificate[]): boolean {
+    if (chain.length === 0) return false
     try {
       return forge.pki.verifyCertificateChain(this.caStore, chain)
     } catch {
