@@ -18,7 +18,7 @@ export default class LoadServerKeyCommand extends Command {
   }
 
   command(): string {
-    return 'keys load-server-key <keyPath> <certPath>'
+    return 'keys load server-key <keyPath> <certPath>'
   }
 
   description(): string {

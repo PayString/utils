@@ -19,6 +19,7 @@ import VerifyPayIdCommand from './commands/payid-verify'
 import ClearCommand from './commands/clear'
 import ShowPayIdCommand from './commands/payid-show'
 import InspectPayIdCommand from './commands/payid-inspect'
+import SavePayIdCommand from './commands/payid-save'
 
 const vorpal = new Vorpal();
 
@@ -41,6 +42,7 @@ new SignPayIdCommand(vorpal, localStorage).setup()
 new VerifyPayIdCommand(vorpal, localStorage).setup()
 new ShowPayIdCommand(vorpal, localStorage).setup()
 new InspectPayIdCommand(vorpal, localStorage).setup()
+new SavePayIdCommand(vorpal, localStorage).setup()
 
 if (process.argv.length > 2) {
   vorpal

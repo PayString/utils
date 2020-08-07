@@ -13,7 +13,7 @@ export default class LoadIdentityKeyCommand extends Command {
   }
 
   command(): string {
-    return 'keys load-identity-key <filePath>'
+    return 'keys load identity-key <filePath>'
   }
 
   description(): string {

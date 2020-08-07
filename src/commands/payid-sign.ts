@@ -25,8 +25,6 @@ export default class SignPayIdCommand extends Command {
         signatures: jws.signatures
       }
     })
-    info.addresses = []
-
     this.localStorage.setItem('payid', info)
     this.prettyLog(info)
   }

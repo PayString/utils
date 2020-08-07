@@ -8,8 +8,8 @@ export default class AddCryptoAddressCommand extends Command {
   async action(args: Vorpal.Args) {
     const info = this.getPaymentInfo()
     const address: Address = {
-      paymentNetwork: args.paymentNetwork,
-      environment: args.environment,
+      paymentNetwork: args.paymentNetwork.toUpperCase(),
+      environment: args.environment.toUpperCase(),
       addressDetailsType: AddressDetailsType.CryptoAddress,
       addressDetails: {
         address: args.address,
