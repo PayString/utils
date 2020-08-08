@@ -1,18 +1,27 @@
 import { promises } from 'fs'
 
-export async function writeFile(filename: string, data: string, index = 0): Promise<String> {
-  const suffixedFilename =  index === 0 ? filename : `${filename}.${index}`
-  return await promises.writeFile(suffixedFilename, data, { flag: 'wx' })
+const MAX_ATTEMPTS = 10
+
+export async function writeFile(
+  filename: string,
+  data: string,
+  index = 0,
+): Promise<string> {
+  const suffixedFilename = index === 0 ? filename : `${filename}.${index}`
+  return promises
+    .writeFile(suffixedFilename, data, { flag: 'wx' })
     .then(() => suffixedFilename)
-    .catch(err => {
-      if (index <= 10) {
-        return writeFile(filename, data, index+1)
-      } else {
-        throw err
+    .catch(async (err) => {
+      if (index <= MAX_ATTEMPTS) {
+        return writeFile(filename, data, index + 1)
       }
+      throw err
     })
 }
 
-export async function overwriteFile(filename: string, data: string): Promise<void> {
-  return await promises.writeFile(filename, data)
+export async function overwriteFile(
+  filename: string,
+  data: string,
+): Promise<void> {
+  return promises.writeFile(filename, data)
 }

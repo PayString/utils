@@ -1,26 +1,25 @@
 import * as Vorpal from 'vorpal'
 
-import Command from './Command';
 import { PaymentInformation } from '../verifiable'
 
-export default class InitPayIdCommand extends Command {
+import Command from './Command'
 
-  async action(args: Vorpal.Args) {
+export default class InitPayIdCommand extends Command {
+  protected async action(args: Vorpal.Args): Promise<void> {
     const info: PaymentInformation = {
       payId: args.payid,
       addresses: [],
       verifiedAddresses: [],
     }
-    this.localStorage.setItem('payid', info)
-    this.logJson(info)
+    this.localStorage.setPaymentInfo(info)
+    this.logPaymentInfo(info)
   }
 
-  command(): string {
+  protected command(): string {
     return 'payid init <payid>'
   }
 
-  description(): string {
+  protected description(): string {
     return 'initializes a new PayID'
   }
-
 }

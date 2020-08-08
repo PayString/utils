@@ -1,52 +1,78 @@
 import * as Vorpal from 'vorpal'
 import { Args } from 'vorpal'
-import LocalStorage from './localstorage'
+
 import { PaymentInformation } from '../verifiable'
 
+import LocalStorage from './localstorage'
+
+/* eslint-disable eslint-comments/no-unlimited-disable -- to many rules to disable */
+/* eslint-disable -- the linter hates this import */
 const { jsonBeautify } = require('beautify-json')
+/* eslint-enable */
 
 abstract class Command {
-
   protected readonly localStorage: LocalStorage
 
   protected readonly vorpal: Vorpal
 
-  constructor(vorpal: Vorpal, localStorage: LocalStorage) {
+  public constructor(vorpal: Vorpal, localStorage: LocalStorage) {
     this.localStorage = localStorage
     this.vorpal = vorpal
   }
 
   public setup(): void {
-    const instance = this
-    this.vorpal
-      .command(instance.command(), instance.description())
-      .action(async function (args: Args) {
+    this.vorpal.command(this.command(), this.description()).action(
+      async (args: Args): Promise<void> => {
         try {
-          await instance.action(args)
+          await this.action(args)
         } catch (error) {
-          instance.vorpal.log(error.message)
+          this.vorpal.log(error)
         }
-      });
+      },
+    )
   }
 
-  getPaymentInfo(): PaymentInformation {
-    const info = this.localStorage.getItem('payid') as PaymentInformation
-    if (!info) {
-      throw new Error(`please run 'payid init' or 'payid load' before adding an address`)
+  /**
+   * Returns the payment information from local storage.
+   *
+   * @returns PaymentInfo.
+   * @throws Error if no info found.
+   */
+  protected getPaymentInfo(): PaymentInformation {
+    const info = this.localStorage.getPaymentInfo()
+    if (info === undefined) {
+      throw new Error(
+        `please run 'payid init' or 'payid load' before adding an address`,
+      )
     }
     return info
   }
 
-  logJson(value: any) {
-    jsonBeautify(value)
+  /**
+   * Pretty prints JSON to the console.
+   *
+   * @param info - Payment info to log.
+   */
+  protected logPaymentInfo(info: PaymentInformation): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- no type def for this library
+    jsonBeautify(JSON.stringify(info, null, 2))
   }
 
-  abstract command(): string
+  /**
+   * The vorpal command.
+   *
+   * @returns The vorpal command.
+   */
+  protected abstract command(): string
 
-  abstract description(): string
+  /**
+   * The vorpal description.
+   *
+   * @returns The vorpal description.
+   */
+  protected abstract description(): string
 
-  async abstract action(args: Args): Promise<void>
-
+  protected abstract async action(args: Args): Promise<void>
 }
 
-export default Command;
+export default Command

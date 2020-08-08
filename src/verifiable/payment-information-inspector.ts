@@ -1,70 +1,113 @@
-import { Address, PaymentInformation, VerifiedAddress } from './verifiable-payid'
-import { ProtectedHeaders, verifySignedAddress } from './signatures'
 import { JWK, JWS } from 'jose'
-import { KeyObject } from "crypto"
-import { extractX5CCertificates } from './certificate-chain-validator'
-import GeneralJWS = JWS.GeneralJWS
-import { CertificateChainValidator } from './index'
-import JWSRecipient = JWS.JWSRecipient
 import { pki } from 'node-forge'
 
+import CertificateChainValidator, {
+  extractX5CCertificates,
+} from './certificate-chain-validator'
+import { toKey } from './keys'
+import { verifySignedAddress } from './signatures'
+import {
+  Address,
+  PaymentInformation,
+  ProtectedHeaders,
+  UnsignedVerifiedAddress,
+  VerifiedAddress,
+} from './verifiable-payid'
+
+/**
+ * Service to inspect a PaymentInformation object's signatures and certificates.
+ */
 export default class PaymentInformationInspector {
+  private readonly chainValidator: CertificateChainValidator
 
-  certificateChainValidator: CertificateChainValidator
-
-  constructor() {
-    this.certificateChainValidator = new CertificateChainValidator()
+  public constructor() {
+    this.chainValidator = new CertificateChainValidator()
   }
 
-
-  public inspect(paymentInfo: PaymentInformation): PaymentInformationInspectionResult {
+  /**
+   * Inspects the signatures and certificate for the given paymentInformation.
+   *
+   * @param paymentInfo - The object to inspect.
+   * @returns The inspection result.
+   * @throws Error - If paymentInfo is missing expected fields.
+   */
+  public inspect(
+    paymentInfo: PaymentInformation,
+  ): PaymentInformationInspectionResult {
     const payId = paymentInfo.payId
     if (!payId) {
       throw new Error('payId property is empty')
     }
-    const verifiedAddressesResults = paymentInfo.verifiedAddresses
-      .map((address) => this.inspectVerifiedAddress(payId, address))
-    const isVerified = verifiedAddressesResults.every(result => result.isVerified)
+    const verifiedAddressesResults = paymentInfo.verifiedAddresses.map(
+      (address) => this.inspectVerifiedAddress(payId, address),
+    )
+    const isVerified = verifiedAddressesResults.every(
+      (result) => result.isVerified,
+    )
     return {
       payId,
       isVerified,
-      verifiedAddressesResults
+      verifiedAddressesResults,
     }
   }
 
-  private inspectVerifiedAddress(payId: string, verifiedAddress: VerifiedAddress): VerifiedAddressInspectionResult {
-    const address = JSON.parse(verifiedAddress.payload).payIdAddress as Address
+  /**
+   * Inspect signature on verified addresses.
+   *
+   * @param payId - The PayID this address belongs to.
+   * @param verifiedAddress - The verified address to inspect.
+   * @returns The inspection result.
+   */
+  private inspectVerifiedAddress(
+    payId: string,
+    verifiedAddress: VerifiedAddress,
+  ): VerifiedAddressInspectionResult {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
+    const address: UnsignedVerifiedAddress = JSON.parse(verifiedAddress.payload)
     const signaturesResults = verifiedAddress.signatures.map((recipient) => {
-      const jwsWithSingleSignature = <GeneralJWS>{
+      const jwsWithSingleSignature = {
         payload: verifiedAddress.payload,
         signatures: [
           {
             signature: recipient.signature,
             protected: recipient.protected,
-          }
-        ]
+          },
+        ],
       }
       return this.inspectSignature(payId, jwsWithSingleSignature, recipient)
     })
-    const isVerified = signaturesResults.every(result => result.isSignatureValid && result.isChainValid)
+    const isVerified = signaturesResults.every(
+      (result) => result.isSignatureValid && result.isChainValid,
+    )
     return {
       isVerified,
-      address,
-      signaturesResults
+      address: address.payIdAddress,
+      signaturesResults,
     }
   }
 
-  private inspectSignature(payId: string, jws: GeneralJWS, recipient: JWSRecipient): SignatureInspectionResult {
+  /**
+   * Inspects the signature.
+   *
+   * @param payId - The payId this signature belongs to.
+   * @param jws - The JWS that contains the recipient.
+   * @param recipient - The recipient signature to inspect.
+   * @returns The inspection result.
+   */
+  private inspectSignature(
+    payId: string,
+    jws: JWS.GeneralJWS,
+    recipient: JWS.JWSRecipient,
+  ): SignatureInspectionResult {
     if (!recipient.protected) {
-      return {
-        isSignatureValid: false,
-        isChainValid: false
-      }
+      return { isSignatureValid: false, isChainValid: false }
     }
-    const headers: ProtectedHeaders =
-      JSON.parse(Buffer.from(recipient.protected, 'base64').toString('utf-8'))
-    const jwk = JWK.asKey(headers.jwk as KeyObject)
-    const isSignatureValid = verifySignedAddress(payId, jws, false)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
+    const headers: ProtectedHeaders = JSON.parse(
+      Buffer.from(recipient.protected, 'base64').toString('utf-8'),
+    )
+    const jwk = toKey(headers.jwk)
+    const isSignatureValid = verifySignedAddress(payId, jws)
     if (headers.name === 'serverKey') {
       const certificateChainResult = this.inspectCertificateChain(recipient)
       return {
@@ -72,19 +115,24 @@ export default class PaymentInformationInspector {
         isChainValid: certificateChainResult.isChainValid,
         keyType: headers.name,
         jwk,
-        certificateChainResult
+        certificateChainResult,
       }
     }
-    return {
-      isSignatureValid,
-      isChainValid: true,
-      keyType: headers.name,
-      jwk
-    }
+    return { isSignatureValid, isChainValid: true, keyType: headers.name, jwk }
   }
 
-  private inspectCertificateChain(recipient: JWSRecipient): CertificateChainInspectionResult {
-    const isChainValid = this.certificateChainValidator.verifyCertificateChainRecipient(recipient)
+  /**
+   * Inspects the certificate chain.
+   *
+   * @param recipient - The recipient/signature to inspect.
+   * @returns The result of inspection.
+   */
+  private inspectCertificateChain(
+    recipient: JWS.JWSRecipient,
+  ): CertificateChainInspectionResult {
+    const isChainValid = this.chainValidator.verifyCertificateChainRecipient(
+      recipient,
+    )
     const certificateResults = extractX5CCertificates(recipient).map((cert) => {
       return inspectCertificate(cert)
     })
@@ -93,29 +141,36 @@ export default class PaymentInformationInspector {
       certificateResults,
     }
   }
-
 }
 
-
-function inspectCertificate(certificate: pki.Certificate): CertificateInspectionResult {
-  const issuedTo = certificate.subject.getField('CN').value
-  const issuedBy = certificate.issuer.getField('CN').value
+/**
+ * Inspects a certificate.
+ *
+ * @param certificate - The certificate to inspect.
+ * @returns The certificate to inspect.
+ */
+function inspectCertificate(
+  certificate: pki.Certificate,
+): CertificateInspectionResult {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access -- library not typed
+  const issuedTo: string = certificate.subject.getField('CN').value || 'unknown'
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access -- library not typed
+  const issuedBy: string = certificate.issuer.getField('CN').value || 'unknown'
   return {
     issuedTo,
     issuedBy,
-    certificate
+    certificate,
   }
 }
 
-
-export interface PaymentInformationInspectionResult {
+interface PaymentInformationInspectionResult {
   payId: string
   // if all the addresses in the PaymentInformation object passed verification
   readonly isVerified: boolean
   verifiedAddressesResults: VerifiedAddressInspectionResult[]
 }
 
-export interface VerifiedAddressInspectionResult {
+interface VerifiedAddressInspectionResult {
   // if all the signatures in the PaymentInformation object passed verification
   readonly isVerified: boolean
   readonly address: Address
@@ -137,13 +192,10 @@ export interface CertificateChainInspectionResult {
   readonly certificateResults: CertificateInspectionResult[]
 }
 
-export interface CertificateInspectionResult {
+interface CertificateInspectionResult {
   // whom the certificate was issue to (CommonName)
   issuedTo: string
   // who issued the certificate (CommonName)
   issuedBy: string
   certificate: pki.Certificate
 }
-
-
-

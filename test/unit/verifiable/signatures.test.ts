@@ -10,7 +10,6 @@ import {
 } from '../../../src/verifiable/keys'
 import ServerKeySigningParams from '../../../src/verifiable/server-key-signing-params'
 import {
-  certificateChainValidator,
   sign,
   signWithKeys,
   signWithServerKey,
@@ -39,7 +38,6 @@ describe('sign()', function () {
   let address: Address
 
   beforeEach(function () {
-    certificateChainValidator.addRootCertificateFile('test/certs/root.crt')
     address = {
       environment: 'TESTNET',
       paymentNetwork: 'XRPL',
@@ -130,21 +128,6 @@ describe('sign()', function () {
       new IdentityKeySigningParams(key, 'ES256K'),
     )
     assert.isFalse(verifySignedAddress('hacked$payid.example', jws))
-  })
-
-  it('verification fails for untrusted self-signed certificate', async function () {
-    const jws = signWithServerKey(
-      payId,
-      address,
-      new ServerKeySigningParams(
-        await getSigningKeyFromFile('test/certs/self-signed.key'),
-        'RS256',
-        await getJwkFromFile('test/certs/self-signed.cert'),
-      ),
-    )
-    // should validate if certificate chain validation is skipped
-    assert.isTrue(verifySignedAddress(payId, jws, false))
-    assert.isFalse(verifySignedAddress(payId, jws))
   })
 
   it('verifySignedAddress - verifies jws with multiple x5c', async function () {

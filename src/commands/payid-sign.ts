@@ -1,11 +1,16 @@
-import Command from './Command';
-import { IdentityKeySigningParams, ServerKeySigningParams, signWithKeys } from '../verifiable'
+import {
+  getAlgorithm,
+  IdentityKeySigningParams,
+  ServerKeySigningParams,
+  signWithKeys,
+  toKey,
+} from '../verifiable'
 import { VerifiedAddress } from '../verifiable/verifiable-payid'
-import { JWK } from 'jose'
+
+import Command from './Command'
 
 export default class SignPayIdCommand extends Command {
-
-  async action() {
+  protected async action(): Promise<void> {
     const info = this.getPaymentInfo()
     const payId = info.payId
     if (!payId) {
@@ -18,48 +23,51 @@ export default class SignPayIdCommand extends Command {
       return
     }
 
-    info.verifiedAddresses = info.addresses.map(address => {
+    info.verifiedAddresses = info.addresses.map((address) => {
       const jws = signWithKeys(payId, address, signingKeys)
       return <VerifiedAddress>{
         payload: jws.payload,
-        signatures: jws.signatures
+        signatures: jws.signatures,
       }
     })
-    this.localStorage.setItem('payid', info)
-    this.logJson(info)
+    this.localStorage.setPaymentInfo(info)
+    this.logPaymentInfo(info)
   }
 
-  private getSigningKeys(): Array<IdentityKeySigningParams | ServerKeySigningParams> {
-    let params: Array<IdentityKeySigningParams | ServerKeySigningParams> = []
-    const serverKey = this.localStorage.getItem('server-key')
-    const serverCert = this.localStorage.getItem('server-cert')
-    const identityKey = this.localStorage.getItem('identity-key')
-    if (serverKey && serverCert) {
-      params = params.concat(new ServerKeySigningParams(
-        JWK.asKey(serverKey),
-        this.getAlgorithm(serverKey),
-        serverCert))
-    }
-    if (identityKey) {
-      params = params.concat(new IdentityKeySigningParams(
-        JWK.asKey(identityKey),
-        this.getAlgorithm(identityKey)))
-    }
-    return params
-  }
-
-  private getAlgorithm(jwk: JWK.RSAKey | JWK.ECKey): string {
-    if (jwk.kty === 'EC') {
-      return 'ES256K'
-    }
-    return 'RS512'
-  }
-
-  command(): string {
+  protected command(): string {
     return 'payid sign'
   }
 
-  description(): string {
+  protected description(): string {
     return 'sign the loaded PayID with the loaded signing keys'
+  }
+
+  private getSigningKeys(): Array<
+    IdentityKeySigningParams | ServerKeySigningParams
+  > {
+    let params: Array<IdentityKeySigningParams | ServerKeySigningParams> = []
+    const serverKey = this.localStorage.getSigningKey('server-key')
+    const serverCert = this.localStorage.getSigningKey('server-cert')
+    const identityKey = this.localStorage.getSigningKey('identity-key')
+    if (serverKey) {
+      if (serverCert) {
+        params = params.concat(
+          new ServerKeySigningParams(
+            toKey(serverKey),
+            getAlgorithm(serverKey),
+            serverCert,
+          ),
+        )
+      }
+    }
+    if (identityKey) {
+      params = params.concat(
+        new IdentityKeySigningParams(
+          toKey(identityKey),
+          getAlgorithm(identityKey),
+        ),
+      )
+    }
+    return params
   }
 }

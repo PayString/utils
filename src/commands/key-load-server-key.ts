@@ -1,28 +1,28 @@
 import * as Vorpal from 'vorpal'
 
-import Command from './Command';
 import * as utils from '../index'
 
+import Command from './Command'
+
 export default class LoadServerKeyCommand extends Command {
+  protected async action(args: Vorpal.Args): Promise<void> {
+    const keyPath: string = args.keyPath
+    const key = await utils.getSigningKeyFromFile(keyPath)
+    const certPath: string = args.certPath
+    this.vorpal.log(`loading server-key from ${keyPath}`)
+    this.vorpal.log(`loading server-cert from ${certPath}`)
+    const cert = await utils.getJwkFromFile(certPath)
 
-  async action(args: Vorpal.Args) {
-    this.vorpal.log(`loading server-key from ${args.keyPath}`)
-    const key = await utils.getSigningKeyFromFile(args.keyPath)
-
-    this.vorpal.log(`loading server-cert from ${args.certPath}`)
-    const cert = await utils.getJwkFromFile(args.certPath)
-
-    this.localStorage.setItem('server-key', key.toJWK(true))
-    this.localStorage.setItem('server-cert', cert)
+    this.localStorage.setJsonWebKey('server-key', key.toJWK(true))
+    this.localStorage.setJsonWebKey('server-cert', cert)
     this.vorpal.log(`Success. Sign away.`)
   }
 
-  command(): string {
+  protected command(): string {
     return 'keys load server-key <keyPath> <certPath>'
   }
 
-  description(): string {
+  protected description(): string {
     return 'loads server key and certificate from file'
   }
-
 }

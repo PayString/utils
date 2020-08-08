@@ -1,39 +1,45 @@
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import * as Vorpal from 'vorpal'
 
-import Command from './Command';
-import { PaymentInformation } from '../verifiable'
 import * as utils from '../index'
+import { PaymentInformation } from '../verifiable'
+
+import Command from './Command'
 
 export default class LoadPayIdCommand extends Command {
-
-  async action(args: Vorpal.Args) {
+  protected async action(args: Vorpal.Args): Promise<void> {
     const payid = args.payid
     const url = utils.convertPayIdToUrl(payid).href
     await axios
       .get(url, {
         headers: {
-          'PayID-Version': '1.0',
+          'payid-version': '1.0',
           accept: 'application/payid+json',
-        }
+        },
       })
       .then((response) => {
-        if (response.status !== 200) {
-          this.vorpal.log(`Received HTTP status ${response.status} on ${url}`)
-          return;
-        }
         const info: PaymentInformation = response.data
-        this.localStorage.setItem('payid', info)
-        this.logJson(info)
+        this.localStorage.setPaymentInfo(info)
+        this.logPaymentInfo(info)
+      })
+      .catch((error) => {
+        const {
+          response,
+          message,
+        }: { response?: AxiosResponse; message: string } = error
+        if (response) {
+          this.vorpal.log(`Received HTTP status ${response.status} on ${url}`)
+          return
+        }
+        this.vorpal.log(`Bad request ${url}. Error: ${message}.`)
       })
   }
 
-  command(): string {
+  protected command(): string {
     return 'payid load <payid>'
   }
 
-  description(): string {
+  protected description(): string {
     return 'loads a PayID from PayID server'
   }
-
 }

@@ -1,32 +1,29 @@
-import Command from './Command';
-// import { JWK } from 'jose'
+import Command from './Command'
 
 export default class ListKeysCommand extends Command {
-
-  async action() {
+  protected async action(): Promise<void> {
     this.printKey('identity-key')
     this.printKey('server-key')
     this.printKey('server-cert')
   }
 
-  private printKey(type: string) {
-    const key = this.localStorage.getItem(type)
-    // const jwk = JWK.asKey(key)
-    if (key) {
-      if (key.kty === 'RSA') {
-        this.vorpal.log(`${type}: type=${key.kty}, id=${key.kid}`)
-      } else {
-        this.vorpal.log(`${type}: type=${key.kty}, type=${key.crv}, id=${key.kid}`)
-      }
-    }
-  }
-
-  command(): string {
+  protected command(): string {
     return 'keys list'
   }
 
-  description(): string {
+  protected description(): string {
     return 'lists keys that have been loaded'
   }
 
+  private printKey(type: string): void {
+    const key = this.localStorage.getSigningKey(type)
+    if (key) {
+      const kid = key.kid ?? 'not set'
+      if ('crv' in key) {
+        this.vorpal.log(`${type}: type=${key.kty}, type=${key.crv}, id=${kid}`)
+      } else {
+        this.vorpal.log(`${type}: type=${key.kty}, id=${kid}`)
+      }
+    }
+  }
 }

@@ -1,17 +1,16 @@
-import Command from './Command';
+import Command from './Command'
 
 export default class ClearCommand extends Command {
-
-  async action() {
+  protected async action(): Promise<void> {
+    // eslint-disable-next-line no-console -- needed to clear the cli console
     console.clear()
   }
 
-  command(): string {
+  protected command(): string {
     return 'clear'
   }
 
-  description(): string {
+  protected description(): string {
     return 'clear the terminal'
   }
-
 }

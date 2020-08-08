@@ -6,9 +6,6 @@ import * as forge from 'node-forge'
 
 import { getJwkFromRecipient, isX5C } from './keys'
 
-import certificateFromPem = forge.pki.certificateFromPem
-import { ProtectedHeaders } from './signatures'
-
 /**
  * Service to validate the certificate chain (using web PKI) for Verifiable PayIDs
  * signed with a a server key.
@@ -40,13 +37,10 @@ export default class CertificateChainValidator {
    * @returns True if verified.
    */
   public verifyCertificateChainRecipient(recipient: JWS.JWSRecipient): boolean {
-    if (!recipient.protected) return false
-    const headers: ProtectedHeaders =
-      JSON.parse(Buffer.from(recipient.protected, 'base64').toString('utf-8'))
-    if (headers.name === 'serverKey') {
-      return this.verifyCertificateChain(extractX5CCertificates(recipient))
+    if (!recipient.protected) {
+      return false
     }
-    return true
+    return this.verifyCertificateChain(extractX5CCertificates(recipient))
   }
 
   /**
@@ -56,7 +50,9 @@ export default class CertificateChainValidator {
    * @returns True if verified.
    */
   public verifyCertificateChain(chain: forge.pki.Certificate[]): boolean {
-    if (chain.length === 0) return false
+    if (chain.length === 0) {
+      return false
+    }
     try {
       return forge.pki.verifyCertificateChain(this.caStore, chain)
     } catch {
@@ -109,7 +105,7 @@ export function extractX5CCertificates(
   const jwk = getJwkFromRecipient(recipient)
   if (jwk && isX5C(jwk) && jwk.x5c) {
     return jwk.x5c.map((pem) =>
-      certificateFromPem(
+      forge.pki.certificateFromPem(
         `-----BEGIN CERTIFICATE-----${pem}-----END CERTIFICATE-----`,
       ),
     )

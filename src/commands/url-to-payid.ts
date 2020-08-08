@@ -1,21 +1,20 @@
 import * as Vorpal from 'vorpal'
 
-import Command from './Command';
 import * as utils from '../index'
 
-export default class UrlToPayidCommand extends Command {
+import Command from './Command'
 
-  command(): string {
+export default class UrlToPayidCommand extends Command {
+  protected command(): string {
     return 'url to-payid <url>'
   }
 
-  description(): string {
+  protected description(): string {
     return 'convert a URL to a PayID'
   }
 
-  async action(args: Vorpal.Args) {
-    const payid = utils.convertUrlToPayId(args.url);
-    this.vorpal.log(payid);
+  protected async action(args: Vorpal.Args): Promise<void> {
+    const payid = utils.convertUrlToPayId(args.url)
+    this.vorpal.log(payid)
   }
-
 }

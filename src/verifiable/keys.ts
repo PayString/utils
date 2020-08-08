@@ -126,3 +126,33 @@ function getX5cChain(
 export function isX5C(params: BasicParameters): params is KeyParameters {
   return 'x5c' in params
 }
+
+export function toKey(
+  jwk: JWKRSAKey | JWKECKey | JWKOctKey | JWKOKPKey,
+): JWK.RSAKey | JWK.ECKey | JWK.OKPKey | JWK.OctKey {
+  if (jwk.kty === 'EC') {
+    return JWK.asKey(jwk)
+  }
+  if (jwk.kty === 'oct') {
+    return JWK.asKey(jwk)
+  }
+  if (jwk.kty === 'OKP') {
+    return JWK.asKey(jwk)
+  }
+  return JWK.asKey(jwk)
+}
+
+export function getAlgorithm(
+  jwk: JWKRSAKey | JWKECKey | JWKOctKey | JWKOKPKey,
+): string {
+  if (jwk.kty === 'EC') {
+    return 'ES256K'
+  }
+  if (jwk.kty === 'oct') {
+    return 'HS512'
+  }
+  if (jwk.kty === 'OKP') {
+    return 'EdDSA'
+  }
+  return 'RS512'
+}

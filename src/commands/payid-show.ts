@@ -1,17 +1,16 @@
-import Command from './Command';
+import Command from './Command'
 
 export default class ShowPayIdCommand extends Command {
-
-  async action() {
+  protected async action(): Promise<void> {
     const info = this.getPaymentInfo()
-    this.logJson(info)
+    this.logPaymentInfo(info)
   }
 
-  command(): string {
+  protected command(): string {
     return 'payid show'
   }
 
-  description(): string {
+  protected description(): string {
     return 'Shows the currently loaded PayID'
   }
 }
