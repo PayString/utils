@@ -2,7 +2,13 @@ import * as Vorpal from 'vorpal'
 
 import Command from './Command'
 
+/**
+ * Removes a crypto address from the current PayID in scope.
+ */
 export default class RemoveCryptoAddressCommand extends Command {
+  /**
+   * @override
+   */
   protected async action(args: Vorpal.Args): Promise<void> {
     const info = this.getPaymentInfo()
     const inputAddress: string = args.address
@@ -21,10 +27,16 @@ export default class RemoveCryptoAddressCommand extends Command {
     this.logPaymentInfo(info)
   }
 
+  /**
+   * @override
+   */
   protected command(): string {
     return 'crypto-address remove <address>'
   }
 
+  /**
+   * @override
+   */
   protected description(): string {
     return 'remove an address from the current PayID'
   }

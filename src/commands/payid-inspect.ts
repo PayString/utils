@@ -10,7 +10,8 @@ import Command from './Command'
 import LocalStorage from './localstorage'
 
 /**
- *
+ * Inspects the currently loaded PayID and prints inspection details to the console.
+ * Inspection looks at verified addresses and verifies the signatures and certificate chain (if present).
  */
 export default class InspectPayIdCommand extends Command {
   private readonly paymentInformationInspector: PaymentInformationInspector
@@ -26,10 +27,16 @@ export default class InspectPayIdCommand extends Command {
     this.paymentInformationInspector = new PaymentInformationInspector()
   }
 
+  /**
+   * @override
+   */
   protected command(): string {
-    return 'payid inspect-signatures'
+    return 'payid inspect'
   }
 
+  /**
+   * @override
+   */
   protected description(): string {
     return 'Inspect signatures on the loaded PayID'
   }

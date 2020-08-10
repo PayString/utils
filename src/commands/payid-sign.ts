@@ -1,14 +1,17 @@
 import {
-  getAlgorithm,
+  getDefaultAlgorithm,
   IdentityKeySigningParams,
   ServerKeySigningParams,
   signWithKeys,
   toKey,
 } from '../verifiable'
-import { VerifiedAddress } from '../verifiable/verifiable-payid'
+import { convertToVerifiedAddress } from '../verifiable/converters'
 
 import Command from './Command'
 
+/**
+ * Signs the currently loaded PayID PaymentInformation using the loaded signings keys.
+ */
 export default class SignPayIdCommand extends Command {
   protected async action(): Promise<void> {
     const info = this.getPaymentInfo()
@@ -25,23 +28,31 @@ export default class SignPayIdCommand extends Command {
 
     info.verifiedAddresses = info.addresses.map((address) => {
       const jws = signWithKeys(payId, address, signingKeys)
-      return <VerifiedAddress>{
-        payload: jws.payload,
-        signatures: jws.signatures,
-      }
+      return convertToVerifiedAddress(jws)
     })
     this.localStorage.setPaymentInfo(info)
     this.logPaymentInfo(info)
   }
 
+  /**
+   * @override
+   */
   protected command(): string {
     return 'payid sign'
   }
 
+  /**
+   * @override
+   */
   protected description(): string {
     return 'sign the loaded PayID with the loaded signing keys'
   }
 
+  /**
+   * Gets the list of signing keys and converts them to SigningKeyParams.
+   *
+   * @returns List of keys.
+   */
   private getSigningKeys(): Array<
     IdentityKeySigningParams | ServerKeySigningParams
   > {
@@ -54,7 +65,7 @@ export default class SignPayIdCommand extends Command {
         params = params.concat(
           new ServerKeySigningParams(
             toKey(serverKey),
-            getAlgorithm(serverKey),
+            getDefaultAlgorithm(serverKey),
             serverCert,
           ),
         )
@@ -64,7 +75,7 @@ export default class SignPayIdCommand extends Command {
       params = params.concat(
         new IdentityKeySigningParams(
           toKey(identityKey),
-          getAlgorithm(identityKey),
+          getDefaultAlgorithm(identityKey),
         ),
       )
     }

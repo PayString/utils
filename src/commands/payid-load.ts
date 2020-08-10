@@ -6,7 +6,16 @@ import { PaymentInformation } from '../verifiable'
 
 import Command from './Command'
 
+/**
+ * Loads a PayID from the remote server. For example, "load test$xpring.money" will
+ * make an HTTP call the https://xpring.money/test with Accept: application/payid+json
+ * header so that all the addresses are returned. If successful, the PaymentInformation
+ * is saved to localstorage as the current payid in context.
+ */
 export default class LoadPayIdCommand extends Command {
+  /**
+   * @override
+   */
   protected async action(args: Vorpal.Args): Promise<void> {
     const payid = args.payid
     const url = utils.convertPayIdToUrl(payid).href
@@ -35,10 +44,16 @@ export default class LoadPayIdCommand extends Command {
       })
   }
 
+  /**
+   * @override
+   */
   protected command(): string {
     return 'payid load <payid>'
   }
 
+  /**
+   * @override
+   */
   protected description(): string {
     return 'loads a PayID from PayID server'
   }

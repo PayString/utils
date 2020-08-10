@@ -1,17 +1,19 @@
-import { Address, PaymentInformation, verifyPayId } from '../verifiable'
+import { PaymentInformation, verifyPayId } from '../verifiable'
+import { convertJsonToVerifiedAddress } from '../verifiable/converters'
 
 import Command from './Command'
 
+/**
+ * Verifies the signatures and certs for verified addresses of the currently loaded PayID.
+ */
 export default class VerifyPayIdCommand extends Command {
   protected async action(): Promise<void> {
     const info = this.getPaymentInfo()
     const copy: PaymentInformation = JSON.parse(JSON.stringify(info))
     if (verifyPayId(info)) {
       copy.addresses = copy.verifiedAddresses.map((address) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- because JSON
-        return JSON.parse(address.payload).payIdAddress as Address
+        return convertJsonToVerifiedAddress(address.payload)
       })
-      copy.verifiedAddresses = []
       this.logPaymentInfo(copy)
       this.vorpal.log(`Successfully verified ${copy.payId}`)
     } else {
@@ -19,10 +21,16 @@ export default class VerifyPayIdCommand extends Command {
     }
   }
 
+  /**
+   * @override
+   */
   protected command(): string {
     return 'payid verify'
   }
 
+  /**
+   * @override
+   */
   protected description(): string {
     return 'Verify the loaded PayID'
   }

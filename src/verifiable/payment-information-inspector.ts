@@ -12,6 +12,7 @@ import {
   ProtectedHeaders,
   UnsignedVerifiedAddress,
   VerifiedAddress,
+  // eslint-disable-next-line import/max-dependencies -- this class brings all the worlds together so has more deps
 } from './verifiable-payid'
 
 /**
@@ -20,8 +21,13 @@ import {
 export default class PaymentInformationInspector {
   private readonly chainValidator: CertificateChainValidator
 
-  public constructor() {
-    this.chainValidator = new CertificateChainValidator()
+  /**
+   * Constructs new inspector.
+   *
+   * @param chainValidator - The chain validator to use for certificate chains.
+   */
+  public constructor(chainValidator = new CertificateChainValidator()) {
+    this.chainValidator = chainValidator
   }
 
   /**
@@ -152,10 +158,10 @@ export default class PaymentInformationInspector {
 function inspectCertificate(
   certificate: pki.Certificate,
 ): CertificateInspectionResult {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access -- library not typed
-  const issuedTo: string = certificate.subject.getField('CN').value || 'unknown'
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access -- library not typed
-  const issuedBy: string = certificate.issuer.getField('CN').value || 'unknown'
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access -- not typed
+  const issuedTo: string = certificate.subject.getField('CN').value ?? 'unknown'
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access -- not typed
+  const issuedBy: string = certificate.issuer.getField('CN').value ?? 'unknown'
   return {
     issuedTo,
     issuedBy,

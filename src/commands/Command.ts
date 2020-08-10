@@ -10,11 +10,21 @@ import LocalStorage from './localstorage'
 const { jsonBeautify } = require('beautify-json')
 /* eslint-enable */
 
+/**
+ * Base class that other commands extend. The base class does command registration to Vorpal and
+ * also manages the local storage access.
+ */
 abstract class Command {
   protected readonly localStorage: LocalStorage
 
   protected readonly vorpal: Vorpal
 
+  /**
+   * Base constructor for a Vorpal command that uses local storage.
+   *
+   * @param vorpal - The vorpal instance to use.
+   * @param localStorage - The shared local storage instance to use.
+   */
   public constructor(vorpal: Vorpal, localStorage: LocalStorage) {
     this.localStorage = localStorage
     this.vorpal = vorpal
@@ -72,6 +82,11 @@ abstract class Command {
    */
   protected abstract description(): string
 
+  /**
+   * Executes the action for the command.
+   *
+   * @param args - Arguments provided by user from command line.
+   */
   protected abstract async action(args: Args): Promise<void>
 }
 

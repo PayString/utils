@@ -127,6 +127,13 @@ export function isX5C(params: BasicParameters): params is KeyParameters {
   return 'x5c' in params
 }
 
+/**
+ * The jose library has 2 types of instances: JWK<Type>Key and JWK.<TypeKey>. The former is just data interface with no
+ * methods where as the latter is a richer type. This method converts from the data interface to the richer type.
+ *
+ * @param jwk - The instance to convert.
+ * @returns The converted result.
+ */
 export function toKey(
   jwk: JWKRSAKey | JWKECKey | JWKOctKey | JWKOKPKey,
 ): JWK.RSAKey | JWK.ECKey | JWK.OKPKey | JWK.OctKey {
@@ -142,7 +149,13 @@ export function toKey(
   return JWK.asKey(jwk)
 }
 
-export function getAlgorithm(
+/**
+ * Gets the default algorithm for a given JWK*Key instance.
+ *
+ * @param jwk - The jwk.
+ * @returns The default algorithm to use.
+ */
+export function getDefaultAlgorithm(
   jwk: JWKRSAKey | JWKECKey | JWKOctKey | JWKOKPKey,
 ): string {
   if (jwk.kty === 'EC') {
