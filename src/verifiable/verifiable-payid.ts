@@ -1,7 +1,7 @@
 /**
  * Type of payment address in PaymentInformation.
  */
-import { JWK } from 'jose'
+import { JWK, JWKECKey, JWKOctKey, JWKOKPKey, JWKRSAKey } from 'jose'
 
 import ECKey = JWK.ECKey
 import RSAKey = JWK.RSAKey
@@ -70,8 +70,22 @@ export interface VerifiedAddressSignature {
   signature: string
 }
 
+export interface UnsignedVerifiedAddress {
+  readonly payId: string
+  readonly payIdAddress: Address
+}
+
 export interface SigningParams {
   readonly key: ECKey | RSAKey | OctKey | OKPKey
   readonly alg: string
   keyType: string
+}
+
+export interface ProtectedHeaders {
+  name: string
+  alg: string
+  typ: 'JOSE+JSON'
+  b64: false
+  crit: ['b64', 'name']
+  jwk: JWKECKey | JWKRSAKey | JWKOKPKey | JWKOctKey
 }
