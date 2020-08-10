@@ -1,7 +1,7 @@
 import { splitPayIdString } from '../helpers'
 
 import Command from './Command'
-import { overwriteFile } from './files'
+import overwriteFile from './files'
 
 /**
  * Saves the PaymentInformation for the currently loaded payid to a json file.
