@@ -22,7 +22,10 @@ export default class SignPayIdCommand extends Command {
     }
     const signingKeys = this.getSigningKeys()
     if (signingKeys.length === 0) {
-      this.vorpal.log(`you must generate or load a key before signing`)
+      this.vorpal.log(
+        'you must generate or load a key before signing using ' +
+          `keys generate 'identity-key' or 'keys load identity-key'`,
+      )
       return
     }
 

@@ -36,7 +36,8 @@ abstract class Command {
         try {
           await this.action(args)
         } catch (error) {
-          this.vorpal.log(error)
+          const { message } = error
+          this.vorpal.log(message)
         }
       },
     )
