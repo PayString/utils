@@ -12,7 +12,7 @@ export default class UrlToPayidCommand extends Command {
    * @override
    */
   protected command(): string {
-    return 'url to-payid <url>'
+    return 'payid from-url <url>'
   }
 
   /**

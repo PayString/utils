@@ -29,13 +29,13 @@ export default class LocalStorage {
     /* eslint-enable */
   }
 
+  /* eslint-disable @typescript-eslint/consistent-type-assertions -- getters/setters enforce consistent types */
   /**
    * Gets the PaymentInformation instance from local storage.
    *
    * @returns The instance or undefined if none exists.
    */
   public getPaymentInfo(): PaymentInformation | undefined {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- guaranteed by setPaymentInfo
     return this.getItem('payid') as PaymentInformation
   }
 
@@ -57,9 +57,9 @@ export default class LocalStorage {
   public getSigningKey(
     name: string,
   ): JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey | undefined {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- guaranteed by setSigningKey
     return this.getItem(name) as JWKRSAKey | JWKECKey | JWKOKPKey | JWKOctKey
   }
+  /* eslint-enable @typescript-eslint/consistent-type-assertions */
 
   /**
    * Sets value for a named signing key from local storage.
@@ -119,6 +119,10 @@ export default class LocalStorage {
   }
 }
 
+/**
+ * VorpalLocalStorage almost but does not quite implement the LocalStorage API. This interface
+ * reflects the methods that are actually implemented.
+ */
 interface VorpalLocalStorage {
   getItem: (key: string) => string | unknown
   setItem: (key: string, value: string) => void

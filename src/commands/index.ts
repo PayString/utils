@@ -1,6 +1,6 @@
 export { default as Command } from './Command'
 export { default as PayIdToUrlCommand } from './payid-to-url'
-export { default as UrlToPayIdCommand } from './url-to-payid'
+export { default as UrlToPayIdCommand } from './payid-from-url'
 export { default as ClearCommand } from './clear'
 export { default as AddCryptoAddressCommand } from './crypto-address-add'
 export { default as RemoveCryptoAddressCommand } from './crypto-address-remove'

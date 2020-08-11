@@ -11,6 +11,7 @@ export default class RemoveCryptoAddressCommand extends Command {
    */
   protected async action(args: Vorpal.Args): Promise<void> {
     const info = this.getPaymentInfo()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Vorpal.Args isn't typed
     const inputAddress: string = args.address
     const toRemove = info.addresses.find((address) => {
       if ('address' in address.addressDetails) {
