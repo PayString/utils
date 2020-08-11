@@ -17,7 +17,7 @@ export default class LoadPayIdCommand extends Command {
    * @override
    */
   protected async action(args: Vorpal.Args): Promise<void> {
-    const payid = args.payid
+    const { payid } = args
     const url = utils.convertPayIdToUrl(payid).href
     await axios
       .get(url, {
@@ -27,11 +27,13 @@ export default class LoadPayIdCommand extends Command {
         },
       })
       .then((response) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- axios response.data has an any type
         const info: PaymentInformation = response.data
         this.localStorage.setPaymentInfo(info)
         this.logPaymentInfo(info)
       })
       .catch((error) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- axios error has an any type
         const {
           response,
           message,
