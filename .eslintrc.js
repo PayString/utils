@@ -37,8 +37,7 @@ module.exports = {
     {
       "files": ["src/commands/*.ts"],
       "rules": {
-        "class-methods-use-this": "off",
-        "@typescript-eslint/no-unsafe-assignment": "off"
+        "class-methods-use-this": "off"
       },
     }],
 }
