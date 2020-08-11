@@ -14,6 +14,7 @@ export default class InitPayIdCommand extends Command {
    */
   protected async action(args: Vorpal.Args): Promise<void> {
     const info: PaymentInformation = {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Vorpal.Args isn't typed
       payId: args.payid,
       addresses: [],
       verifiedAddresses: [],
