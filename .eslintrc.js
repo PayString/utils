@@ -27,5 +27,17 @@ module.exports = {
   ],
 
   rules: {},
-  overrides: [],
+  overrides: [
+    {
+      "files": ["*cli.ts"],
+      "rules": {
+        "node/shebang": "off"
+      },
+    },
+    {
+      "files": ["src/commands/*.ts"],
+      "rules": {
+        "class-methods-use-this": "off"
+      },
+    }],
 }
