@@ -38,7 +38,7 @@ export interface FiatAddressDetails {
  * case of a GET request to the base path /).
  */
 export interface PaymentInformation {
-  readonly payId?: string
+  readonly payId: string
   readonly addresses: Address[]
   readonly verifiedAddresses: VerifiedAddress[]
   readonly memo?: string
