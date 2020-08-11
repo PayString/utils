@@ -53,7 +53,7 @@ abstract class Command {
     const info = this.localStorage.getPaymentInfo()
     if (info === undefined) {
       throw new Error(
-        `please run 'payid init' or 'payid load' before adding an address`,
+        `error: no PayID loaded. Run 'payid init' or 'payid load' first.`,
       )
     }
     return info
