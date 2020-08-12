@@ -15,7 +15,7 @@ export default class GenerateIdentityKeyCommand extends Command {
     const key = await JWK.generate('EC', 'secp256k1')
     const pem = key.toPEM(true)
     try {
-      const filename = await writeFile('./identity-key.pem', key.toPEM(true))
+      const filename = await writeFile('./identity-key.pem', pem)
       this.vorpal.log(`wrote key to ${filename}`)
     } catch {
       this.vorpal.log('failed to write key, outputting instead')
