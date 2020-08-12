@@ -66,16 +66,14 @@ export default class SignPayIdCommand extends Command {
     const serverKey = this.localStorage.getSigningKey('server-key')
     const serverCert = this.localStorage.getSigningKey('server-cert')
     const identityKey = this.localStorage.getSigningKey('identity-key')
-    if (serverKey) {
-      if (serverCert) {
-        params = params.concat(
-          new ServerKeySigningParams(
-            toKey(serverKey),
-            getDefaultAlgorithm(serverKey),
-            serverCert,
-          ),
-        )
-      }
+    if (serverKey && serverCert) {
+      params = params.concat(
+        new ServerKeySigningParams(
+          toKey(serverKey),
+          getDefaultAlgorithm(serverKey),
+          serverCert,
+        ),
+      )
     }
     if (identityKey) {
       params = params.concat(
