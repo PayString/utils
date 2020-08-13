@@ -38,7 +38,9 @@ abstract class Command {
         try {
           await this.action(args)
         } catch (error) {
-          this.vorpal.log(error)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- error has any type
+          const { message } = error
+          this.vorpal.log(message)
         }
       },
     )
@@ -54,7 +56,7 @@ abstract class Command {
     const info = this.localStorage.getPaymentInfo()
     if (info === undefined) {
       throw new Error(
-        `please run 'payid init' or 'payid load' before adding an address`,
+        `error: no PayID loaded. Run 'payid init' or 'payid load' first.`,
       )
     }
     return info

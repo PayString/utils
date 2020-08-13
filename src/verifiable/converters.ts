@@ -1,6 +1,10 @@
 import { JWS } from 'jose'
 
-import { Address, VerifiedAddress } from './verifiable-payid'
+import {
+  Address,
+  PaymentInformation,
+  VerifiedAddress,
+} from './verifiable-payid'
 
 /**
  * Converts a GeneralJWS to a Verified Address. Both have the same JWS structure but for
@@ -36,4 +40,30 @@ export function convertJsonToVerifiedAddress(json: string): Address {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
   const { payIdAddress }: { payIdAddress: Address } = JSON.parse(json)
   return payIdAddress
+}
+
+/**
+ * Converts JSON string to typed Address instance.
+ *
+ * @param json - JSON string.
+ * @returns PaymentInformation instance.
+ */
+export function convertJsonToPaymentInformation(
+  json: string,
+): PaymentInformation {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
+  const {
+    payId,
+    addresses,
+    verifiedAddresses,
+  }: {
+    payId: string
+    addresses: Address[]
+    verifiedAddresses: VerifiedAddress[]
+  } = JSON.parse(json)
+  return {
+    payId,
+    addresses,
+    verifiedAddresses,
+  }
 }
