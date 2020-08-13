@@ -38,6 +38,7 @@ abstract class Command {
         try {
           await this.action(args)
         } catch (error) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- error has any type
           const { message } = error
           this.vorpal.log(message)
         }
