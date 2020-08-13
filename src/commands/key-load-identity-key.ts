@@ -13,6 +13,7 @@ export default class LoadIdentityKeyCommand extends Command {
    * @override
    */
   protected async action(args: Vorpal.Args): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Vorpal.Args isn't typed
     const filePath: string = args.filePath
     this.vorpal.log(`loading identity-key from ${filePath}`)
     const key = await utils.getSigningKeyFromFile(filePath)

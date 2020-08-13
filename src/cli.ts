@@ -6,6 +6,7 @@ import * as cmd from './commands'
 
 const vorpal = new Vorpal()
 
+// This enables command history within the CLI similar to bash.
 vorpal.history('payid')
 
 const localStorage = new cmd.LocalStorage('payid', vorpal)
@@ -27,6 +28,9 @@ new cmd.VerifyPayIdCommand(vorpal, localStorage).setup()
 new cmd.SavePayIdCommand(vorpal, localStorage).setup()
 new cmd.UrlToPayIdCommand(vorpal, localStorage).setup()
 
+// The CLI can be run in interactive mode or to run a single command and terminate.
+// For CLI mode, process.argv will have 2 values (e.g. node dist/cli.js) even if using the alias 'payid-utils'.
+// For single command mode there will be additional arguments for the single command.
 if (process.argv.length > 2) {
   vorpal.parse(process.argv)
 } else {

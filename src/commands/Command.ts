@@ -15,9 +15,9 @@ const { jsonBeautify } = require('beautify-json')
  * also manages the local storage access.
  */
 abstract class Command {
-  protected readonly localStorage: LocalStorage
-
   protected readonly vorpal: Vorpal
+
+  protected readonly localStorage: LocalStorage
 
   /**
    * Base constructor for a Vorpal command that uses local storage.
@@ -31,6 +31,8 @@ abstract class Command {
   }
 
   public setup(): void {
+    // Register the concrete command to Vorpal.
+    // Execute the concrete action inside a try/catch wrapper
     this.vorpal.command(this.command(), this.description()).action(
       async (args: Args): Promise<void> => {
         try {

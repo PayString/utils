@@ -13,10 +13,12 @@ export default class AddCryptoAddressCommand extends Command {
    */
   protected async action(args: Vorpal.Args): Promise<void> {
     const info = this.getPaymentInfo()
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment -- Vorpal.Args isn't typed */
     const paymentNetwork: string = args.paymentNetwork
     const environment: string = args.environment
     const cryptoAddress: string = args.address
     const tag: string | undefined = args.tag
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
     const address: Address = {
       paymentNetwork: paymentNetwork.toUpperCase(),

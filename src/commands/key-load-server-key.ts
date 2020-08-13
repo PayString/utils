@@ -13,8 +13,10 @@ export default class LoadServerKeyCommand extends Command {
    * @override
    */
   protected async action(args: Vorpal.Args): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Vorpal.Args isn't typed
     const keyPath: string = args.keyPath
     const key = await utils.getSigningKeyFromFile(keyPath)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Vorpal.Args isn't typed
     const certPath: string = args.certPath
     this.vorpal.log(`loading server-key from ${keyPath}`)
     this.vorpal.log(`loading server-cert from ${certPath}`)

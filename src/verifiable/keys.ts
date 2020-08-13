@@ -137,6 +137,8 @@ export function isX5C(params: BasicParameters): params is KeyParameters {
 export function toKey(
   jwk: JWKRSAKey | JWKECKey | JWKOctKey | JWKOKPKey,
 ): JWK.RSAKey | JWK.ECKey | JWK.OKPKey | JWK.OctKey {
+  // JWKRSAKey, JWKECKey, etc use typescript conditional typing so
+  // these if conditions are needed to target the correct method overload.
   if (jwk.kty === 'EC') {
     return JWK.asKey(jwk)
   }

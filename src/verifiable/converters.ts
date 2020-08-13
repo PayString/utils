@@ -7,7 +7,8 @@ import {
 } from './verifiable-payid'
 
 /**
- * Converts a GeneralJWS to a Verified Address.
+ * Converts a GeneralJWS to a Verified Address. Both have the same JWS structure but for
+ * PayID we use our own type so as not to be coupled too tightly to the underlying JOSE library.
  *
  * @param jws - The JWS to convert.
  * @returns The address.
