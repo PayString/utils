@@ -38,7 +38,7 @@
     "@arkweid/lefthook": "^0.7.2",
     "@fintechstudios/eslint-plugin-chai-as-promised": "^3.0.2",
     "@types/chai": "^4.2.11",
-    "@types/mocha": "^7.0.2",
+    "@types/mocha": "^8.0.2",
     "@types/node": "^14.0.14",
     "@types/node-forge": "^0.9.4",
     "@types/pem-jwk": "^1.5.0",
