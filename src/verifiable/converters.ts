@@ -36,7 +36,7 @@ export function convertToVerifiedAddress(jws: JWS.GeneralJWS): VerifiedAddress {
  * @param json - JSON string.
  * @returns Address instance.
  */
-export function convertJsonToVerifiedAddress(json: string): Address {
+export function convertJsonToAddress(json: string): Address {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
   const { payIdAddress }: { payIdAddress: Address } = JSON.parse(json)
   return payIdAddress
