@@ -14,25 +14,20 @@
   "author": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": {
-    "payid-utils": "./dist/cli.js"
-  },
   "files": [
     "dist/*"
   ],
   "scripts": {
-    "preinstall": "npx npm-force-resolutions",
     "build": "rm -rf dist && tsc --project .",
     "lint": "eslint . --ext .ts --fix --max-warnings 0 && prettier --write '**/*.{md,json}'",
     "lintNoFix": "eslint . --ext .ts --max-warnings 0 && prettier --check '**/*.{md,json}'",
+    "prepare": "npm run build",
     "test": "nyc mocha 'test/**/*.test.ts'"
   },
   "dependencies": {
     "axios": "^0.19.2",
     "beautify-json": "^1.0.1",
-    "jose": "^1.27.3",
-    "node-forge": "^0.9.1",
-    "vorpal": "^1.12.0"
+    "jose": "^1.27.3"
   },
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.2",
@@ -40,9 +35,6 @@
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
     "@types/node": "^14.0.14",
-    "@types/node-forge": "^0.9.4",
-    "@types/pem-jwk": "^1.5.0",
-    "@types/vorpal": "^1.12.0",
     "@typescript-eslint/eslint-plugin": "^3.7.1",
     "@typescript-eslint/parser": "^3.7.1",
     "@xpring-eng/eslint-config-base": "^0.11.0",
@@ -68,8 +60,5 @@
     "node": ">=12.0.0",
     "npm": ">=6",
     "yarn": "please use npm"
-  },
-  "resolutions": {
-    "lodash": "^4.17.19"
   }
 }
