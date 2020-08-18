@@ -1,11 +1,9 @@
 import { JWS, JWK } from 'jose'
 
 import IdentityKeySigningParams from './identity-key-signing-params'
-import ServerKeySigningParams from './server-key-signing-params'
 import {
   Address,
   PaymentInformation,
-  ProtectedHeaders,
   UnsignedVerifiedAddress,
 } from './verifiable-payid'
 
@@ -20,25 +18,6 @@ import GeneralJWS = JWS.GeneralJWS
  * @returns A signed JWS.
  */
 export function sign(
-  payId: string,
-  address: Address,
-  signingParams: IdentityKeySigningParams | ServerKeySigningParams,
-): GeneralJWS {
-  if (signingParams instanceof ServerKeySigningParams) {
-    return signWithServerKey(payId, address, signingParams)
-  }
-  return signWithIdentityKey(payId, address, signingParams)
-}
-
-/**
- * Creates a signed JWS.
- *
- * @param payId - The payID that owns this verified address.
- * @param address - The address to sign.
- * @param signingParams - The key/alg to use to generate the signature.
- * @returns A signed JWS.
- */
-function signWithIdentityKey(
   payId: string,
   address: Address,
   signingParams: IdentityKeySigningParams,
@@ -69,46 +48,13 @@ function signWithIdentityKey(
  *
  * @param payId - The payID that owns this verified address.
  * @param address - The address to sign.
- * @param signingParams - The key/alg to use to generate the signature.
- * @returns A signed JWS.
- */
-export function signWithServerKey(
-  payId: string,
-  address: Address,
-  signingParams: ServerKeySigningParams,
-): GeneralJWS {
-  const unsigned: UnsignedVerifiedAddress = {
-    payId,
-    payIdAddress: address,
-  }
-
-  const signer = new JWS.Sign(unsigned)
-
-  const protectedHeaders: ProtectedHeaders = {
-    name: 'serverKey',
-    alg: signingParams.alg,
-    typ: 'JOSE+JSON',
-    b64: false,
-    crit: ['b64', 'name'],
-    jwk: signingParams.jwk,
-  }
-
-  signer.recipient(signingParams.key, protectedHeaders)
-  return signer.sign('general')
-}
-
-/**
- * Creates a signed JWS.
- *
- * @param payId - The payID that owns this verified address.
- * @param address - The address to sign.
  * @param signingParams - The list of key/alg to use to generate the signature.
  * @returns A signed JWS.
  */
 export function signWithKeys(
   payId: string,
   address: Address,
-  signingParams: Array<IdentityKeySigningParams | ServerKeySigningParams>,
+  signingParams: IdentityKeySigningParams[],
 ): GeneralJWS {
   // There seems to be a bug with the JOSE library when dealing with multiple signatures + unencoded payloads.
   // It should be possible to pass multiple keys during signing, but the payload gets garbled due to a bug in jose.
