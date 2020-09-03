@@ -111,8 +111,14 @@ describe('sign()', function () {
 }`
     assert.isTrue(verifyPayId(json))
   })
-})
 
-function defaultAlgorithm(key: JWK.ECKey): string {
-  return getDefaultAlgorithm(key.toJWK())
-}
+  /**
+   * Gets the default algorithm for a ECKey.
+   *
+   * @param key - The key.
+   * @returns The default algorithm to use.
+   */
+  function defaultAlgorithm(key: JWK.ECKey): string {
+    return getDefaultAlgorithm(key.toJWK())
+  }
+})
