@@ -1,6 +1,6 @@
 {
   "name": "@payid-org/utils",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "A TypeScript library providing PayID utility functions",
   "homepage": "https://github.com/payid-org/utils#readme",
   "bugs": {
@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "beautify-json": "^1.0.1",
     "jose": "^1.27.3"
   },
   "devDependencies": {
