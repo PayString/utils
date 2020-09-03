@@ -3,6 +3,7 @@ import 'mocha'
 import { assert } from 'chai'
 import { JWK } from 'jose'
 
+import { getDefaultAlgorithm } from '../../../src/verifiable'
 import IdentityKeySigningParams from '../../../src/verifiable/identity-key-signing-params'
 import {
   sign,
@@ -17,6 +18,7 @@ import {
 } from '../../../src/verifiable/verifiable-payid'
 
 describe('sign()', function () {
+  const curve = 'P-256'
   const payId = 'alice$payid.example'
   const xrpAddress = 'rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6'
   const addressDetails: CryptoAddressDetails = {
@@ -35,8 +37,8 @@ describe('sign()', function () {
   })
 
   it('Signed PayID returns JWS', async function () {
-    const key = await JWK.generate('EC', 'secp256k1')
-    const params = new IdentityKeySigningParams(key, 'ES256K')
+    const key = await JWK.generate('EC', curve)
+    const params = new IdentityKeySigningParams(key, defaultAlgorithm(key))
     const jws = sign(payId, address, params)
 
     const expectedPayload =
@@ -48,11 +50,17 @@ describe('sign()', function () {
   })
 
   it('signs and verifies with using multiple signatures', async function () {
-    const identityKey1 = await JWK.generate('EC', 'secp256k1')
-    const identityKey2 = await JWK.generate('EC', 'secp256k1')
+    const identityKey1 = await JWK.generate('EC', curve)
+    const identityKey2 = await JWK.generate('EC', curve)
     const jws = signWithKeys(payId, address, [
-      new IdentityKeySigningParams(identityKey1, 'ES256K'),
-      new IdentityKeySigningParams(identityKey2, 'ES256K'),
+      new IdentityKeySigningParams(
+        identityKey1,
+        defaultAlgorithm(identityKey1),
+      ),
+      new IdentityKeySigningParams(
+        identityKey2,
+        defaultAlgorithm(identityKey2),
+      ),
     ])
 
     const expectedPayload =
@@ -64,22 +72,22 @@ describe('sign()', function () {
   })
 
   it('cannot be verified if payload tampered with', async function () {
-    const key = await JWK.generate('EC', 'secp256k1')
+    const key = await JWK.generate('EC', curve)
     const jws = sign(
       payId,
       address,
-      new IdentityKeySigningParams(key, 'ES256K'),
+      new IdentityKeySigningParams(key, defaultAlgorithm(key)),
     )
     jws.payload = jws.payload.replace(xrpAddress, 'hackedXrpAdddress')
     assert.isFalse(verifySignedAddress(payId, jws))
   })
 
   it('verification fails if payid does not match payload', async function () {
-    const key = await JWK.generate('EC', 'secp256k1')
+    const key = await JWK.generate('EC', curve)
     const jws = sign(
       payId,
       address,
-      new IdentityKeySigningParams(key, 'ES256K'),
+      new IdentityKeySigningParams(key, defaultAlgorithm(key)),
     )
     assert.isFalse(verifySignedAddress('hacked$payid.example', jws))
   })
@@ -104,3 +112,7 @@ describe('sign()', function () {
     assert.isTrue(verifyPayId(json))
   })
 })
+
+function defaultAlgorithm(key: JWK.ECKey): string {
+  return getDefaultAlgorithm(key.toJWK())
+}
