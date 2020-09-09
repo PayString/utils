@@ -92,7 +92,7 @@ export function getDefaultAlgorithm(
   jwk: JWKRSAKey | JWKECKey | JWKOctKey | JWKOKPKey,
 ): string {
   if (jwk.kty === 'EC') {
-    return 'ES256K'
+    return 'ES256'
   }
   if (jwk.kty === 'oct') {
     return 'HS512'

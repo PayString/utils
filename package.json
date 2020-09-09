@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "beautify-json": "^1.0.1",
     "jose": "^1.27.3"
   },
   "devDependencies": {
