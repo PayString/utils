@@ -3,7 +3,7 @@ import 'mocha'
 import { assert } from 'chai'
 import { JWK } from 'jose'
 
-import { getDefaultAlgorithm } from '../../../src/verifiable'
+import { generateNewKey, getDefaultAlgorithm } from '../../../src/verifiable'
 import IdentityKeySigningParams from '../../../src/verifiable/identity-key-signing-params'
 import {
   sign,
@@ -18,7 +18,6 @@ import {
 } from '../../../src/verifiable/verifiable-payid'
 
 describe('sign()', function () {
-  const curve = 'P-256'
   const payId = 'alice$payid.example'
   const xrpAddress = 'rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6'
   const addressDetails: CryptoAddressDetails = {
@@ -37,7 +36,7 @@ describe('sign()', function () {
   })
 
   it('Signed PayID returns JWS', async function () {
-    const key = await JWK.generate('EC', curve)
+    const key = await generateNewKey()
     const params = new IdentityKeySigningParams(key, defaultAlgorithm(key))
     const jws = sign(payId, address, params)
 
@@ -50,8 +49,8 @@ describe('sign()', function () {
   })
 
   it('signs and verifies with using multiple signatures', async function () {
-    const identityKey1 = await JWK.generate('EC', curve)
-    const identityKey2 = await JWK.generate('EC', curve)
+    const identityKey1 = await generateNewKey()
+    const identityKey2 = await generateNewKey()
     const jws = signWithKeys(payId, address, [
       new IdentityKeySigningParams(
         identityKey1,
@@ -72,7 +71,7 @@ describe('sign()', function () {
   })
 
   it('cannot be verified if payload tampered with', async function () {
-    const key = await JWK.generate('EC', curve)
+    const key = await generateNewKey()
     const jws = sign(
       payId,
       address,
@@ -83,7 +82,7 @@ describe('sign()', function () {
   })
 
   it('verification fails if payid does not match payload', async function () {
-    const key = await JWK.generate('EC', curve)
+    const key = await generateNewKey()
     const jws = sign(
       payId,
       address,
