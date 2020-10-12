@@ -8,6 +8,8 @@ import OKPKey = JWK.OKPKey
 import OctKey = JWK.OctKey
 import JWSRecipient = JWS.JWSRecipient
 
+const DEFAULT_CURVE = 'P-256'
+
 /**
  * Reads JWK key from a file.
  *
@@ -101,4 +103,13 @@ export function getDefaultAlgorithm(
     return 'EdDSA'
   }
   return 'RS512'
+}
+
+/**
+ * Generates an new JWK key that can be used for V.PayID.
+ *
+ * @returns A JWK key.
+ */
+export async function generateNewKey(): Promise<ECKey> {
+  return JWK.generate('EC', DEFAULT_CURVE)
 }
