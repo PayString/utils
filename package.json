@@ -25,8 +25,7 @@
     "test": "nyc mocha 'test/**/*.test.ts'"
   },
   "dependencies": {
-    "axios": "^0.19.2",
-    "jose": "^1.27.3"
+    "axios": "^0.19.2"
   },
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.2",

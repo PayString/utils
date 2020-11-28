@@ -1,7 +1,0 @@
-export * from './converters'
-export * from './keys'
-export { default as IdentityKeySigningParams } from './identity-key-signing-params'
-export { default as PaymentInformationInspector } from './payment-information-inspector'
-export * from './payment-information-inspector'
-export * from './signatures'
-export * from './verifiable-payid'
