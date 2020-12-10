@@ -1,14 +1,14 @@
 {
-  "name": "@payid-org/utils",
+  "name": "@PayString/utils",
   "version": "1.0.0",
   "description": "A TypeScript library providing PayID utility functions",
-  "homepage": "https://github.com/payid-org/utils#readme",
+  "homepage": "https://github.com/PayString/utils#readme",
   "bugs": {
-    "url": "https://github.com/payid-org/utils/issues"
+    "url": "https://github.com/PayString/utils/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/payid-org/utils.git"
+    "url": "git+https://github.com/PayString/utils.git"
   },
   "license": "Apache-2.0",
   "author": "",

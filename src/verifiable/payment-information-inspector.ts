@@ -8,7 +8,7 @@ import {
   ProtectedHeaders,
   UnsignedVerifiedAddress,
   VerifiedAddress,
-} from './verifiable-payid'
+} from './verifiable-paystring'
 
 /**
  * Service to inspect a PaymentInformation object's signatures and certificates.
@@ -24,18 +24,18 @@ export default class PaymentInformationInspector {
   public inspect(
     paymentInfo: PaymentInformation,
   ): PaymentInformationInspectionResult {
-    const payId = paymentInfo.payId
-    if (!payId) {
-      throw new Error('payId property is empty')
+    const payString = paymentInfo.payId
+    if (!payString) {
+      throw new Error('payString property is empty')
     }
     const verifiedAddressesResults = paymentInfo.verifiedAddresses.map(
-      (address) => this.inspectVerifiedAddress(payId, address),
+      (address) => this.inspectVerifiedAddress(payString, address),
     )
     const isVerified = verifiedAddressesResults.every(
       (result) => result.isVerified,
     )
     return {
-      payId,
+      payString,
       isVerified,
       verifiedAddressesResults,
     }
@@ -44,12 +44,12 @@ export default class PaymentInformationInspector {
   /**
    * Inspect signature on verified addresses.
    *
-   * @param payId - The PayID this address belongs to.
+   * @param payString - The PayString this address belongs to.
    * @param verifiedAddress - The verified address to inspect.
    * @returns The inspection result.
    */
   private inspectVerifiedAddress(
-    payId: string,
+    payString: string,
     verifiedAddress: VerifiedAddress,
   ): VerifiedAddressInspectionResult {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
@@ -64,7 +64,7 @@ export default class PaymentInformationInspector {
           },
         ],
       }
-      return this.inspectSignature(payId, jwsWithSingleSignature, recipient)
+      return this.inspectSignature(payString, jwsWithSingleSignature, recipient)
     })
     const isVerified = signaturesResults.every(
       (result) => result.isSignatureValid,
@@ -79,14 +79,14 @@ export default class PaymentInformationInspector {
   /**
    * Inspects the signature.
    *
-   * @param payId - The payId this signature belongs to.
+   * @param payString - The payString this signature belongs to.
    * @param jws - The JWS that contains the recipient.
    * @param recipient - The recipient signature to inspect.
    * @returns The inspection result.
    */
   // eslint-disable-next-line class-methods-use-this -- previously referenced a class field. could be refactored.
   private inspectSignature(
-    payId: string,
+    payString: string,
     jws: JWS.GeneralJWS,
     recipient: JWS.JWSRecipient,
   ): SignatureInspectionResult {
@@ -98,13 +98,13 @@ export default class PaymentInformationInspector {
       Buffer.from(recipient.protected, 'base64').toString('utf-8'),
     )
     const jwk = toKey(headers.jwk)
-    const isSignatureValid = verifySignedAddress(payId, jws)
+    const isSignatureValid = verifySignedAddress(payString, jws)
     return { isSignatureValid, keyType: headers.name, jwk }
   }
 }
 
 interface PaymentInformationInspectionResult {
-  payId: string
+  payString: string
   // if all the addresses in the PaymentInformation object passed verification
   readonly isVerified: boolean
   verifiedAddressesResults: VerifiedAddressInspectionResult[]

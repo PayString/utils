@@ -8,7 +8,7 @@ import RSAKey = JWK.RSAKey
 import OctKey = JWK.OctKey
 import OKPKey = JWK.OKPKey
 
-// TODO:(@nhartner) pull most these types from an external PayID types library once it exists
+// TODO:(@nhartner) pull most these types from an external PayString types library once it exists
 export enum AddressDetailsType {
   CryptoAddress = 'CryptoAddressDetails',
   // Replaces AchAddressDetails

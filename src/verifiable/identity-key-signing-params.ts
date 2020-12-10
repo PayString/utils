@@ -1,6 +1,6 @@
 import { JWK } from 'jose'
 
-import { SigningParams } from './verifiable-payid'
+import { SigningParams } from './verifiable-paystring'
 
 import ECKey = JWK.ECKey
 import RSAKey = JWK.RSAKey
@@ -8,7 +8,7 @@ import OctKey = JWK.OctKey
 import OKPKey = JWK.OKPKey
 
 /**
- * Represents the properties needed to sign a PayID using an identity key.
+ * Represents the properties needed to sign a PayString using an identity key.
  */
 export default class IdentityKeySigningParams implements SigningParams {
   public readonly keyType = 'identityKey'
