@@ -1,6 +1,6 @@
-# `@PayString/utils`
+# `@paystring/utils`
 
-![NPM version badge](https://img.shields.io/npm/v/@PayString/utils)
+![NPM version badge](https://img.shields.io/npm/v/@paystring/utils)
 
 A TypeScript library providing PayString utility functions.
 
@@ -9,7 +9,7 @@ A TypeScript library providing PayString utility functions.
 This library was designed to solve various pain points when implementing a PayString client or server.
 
 ```ts
-import * as utils from '@PayString/utils'
+import * as utils from '@paystring/utils'
 
 const payString = 'alice$example.com'
 
@@ -80,7 +80,7 @@ and construct a payment info object containing the verified/signed address, and 
 of a signed PayString address.
 
 ```ts
-import * as utils from '@PayString/utils'
+import * as utils from '@paystring/utils'
 
 const payString = 'alice$payString.example'
 const address = {

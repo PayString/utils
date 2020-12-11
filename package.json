@@ -1,5 +1,5 @@
 {
-  "name": "@PayString/utils",
+  "name": "@paystring/utils",
   "version": "1.0.0",
   "description": "A TypeScript library providing PayID utility functions",
   "homepage": "https://github.com/PayString/utils#readme",
