@@ -19,7 +19,7 @@ describe('inspects()', function () {
 
   it('contains inspection results for signatures', async function () {
     const info = await loadInfoFromFile(
-      'test/unit/verifiable/signed-payid.json',
+      'test/unit/verifiable/signed-paystring.json',
     )
     const result = inspector.inspect(info)
     assert.isTrue(result.isVerified)

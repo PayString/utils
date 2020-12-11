@@ -4,4 +4,4 @@ export { default as IdentityKeySigningParams } from './identity-key-signing-para
 export { default as PaymentInformationInspector } from './payment-information-inspector'
 export * from './payment-information-inspector'
 export * from './signatures'
-export * from './verifiable-payid'
+export * from './verifiable-paystring'

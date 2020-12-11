@@ -4,11 +4,11 @@ import {
   Address,
   PaymentInformation,
   VerifiedAddress,
-} from './verifiable-payid'
+} from './verifiable-paystring'
 
 /**
  * Converts a GeneralJWS to a Verified Address. Both have the same JWS structure but for
- * PayID we use our own type so as not to be coupled too tightly to the underlying JOSE library.
+ * PayString we use our own type so as not to be coupled too tightly to the underlying JOSE library.
  *
  * @param jws - The JWS to convert.
  * @returns The address.
@@ -38,8 +38,8 @@ export function convertToVerifiedAddress(jws: JWS.GeneralJWS): VerifiedAddress {
  */
 export function convertJsonToAddress(json: string): Address {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
-  const { payIdAddress }: { payIdAddress: Address } = JSON.parse(json)
-  return payIdAddress
+  const { payStringAddress }: { payStringAddress: Address } = JSON.parse(json)
+  return payStringAddress
 }
 
 /**

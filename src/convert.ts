@@ -1,45 +1,49 @@
-import { splitPayIdString } from './helpers'
-import { parsePayId, parsePayIdUrl } from './parse'
-import type { PayIdUrl, PayId } from './types'
+import { splitPayString } from './helpers'
+import { parsePayString, parsePayStringUrl } from './parse'
+import type { PayStringUrl, PayString } from './types'
 
 /**
- * Convert a PayID string to a PayIdUrl.
+ * Convert a PayString string to a PayStringUrl.
  *
- * @param potentialPayId - A string that might be a valid PayID.
+ * @param potentialPayString - A string that might be a valid PayString.
  *
- * @returns A URL object typed as a PayIdUrl.
+ * @returns A URL object typed as a PayStringUrl.
  *
- * @throws An error if the PayID given as an input  is invalid.
+ * @throws An error if the PayString given as an input  is invalid.
  */
-export function convertPayIdToUrl(potentialPayId: string): PayIdUrl {
-  const payId = parsePayId(potentialPayId)
+export function convertPayStringToUrl(
+  potentialPayString: string,
+): PayStringUrl {
+  const payString = parsePayString(potentialPayString)
 
-  const [user, host] = splitPayIdString(payId)
+  const [user, host] = splitPayString(payString)
 
-  // TODO:(hbergren) If PayID Discovery becomes real,
-  // this might need to make a fetch() request to determine how to build the PayID URL.
-  return parsePayIdUrl(`https://${host}/${user}`)
+  // TODO:(hbergren) If PayString Discovery becomes real,
+  // this might need to make a fetch() request to determine how to build the PayString URL.
+  return parsePayStringUrl(`https://${host}/${user}`)
 }
 
 /**
- * Convert a PayID URL as a string or URL object to a PayID string representation.
+ * Convert a PayString URL as a string or URL object to a PayString string representation.
  *
- * @param potentialPayIdUrl - A string or URL that might be a valid PayID URL.
+ * @param potentialPayStringUrl - A string or URL that might be a valid PayString URL.
  *
- * @returns A valid PayID string typed as a PayId.
+ * @returns A valid PayString string typed as a PayString.
  *
- * @throws An error if the PayID URL given as an input is invalid.
+ * @throws An error if the PayString URL given as an input is invalid.
  */
-export function convertUrlToPayId(potentialPayIdUrl: string | URL): PayId {
-  const payIdUrl = parsePayIdUrl(potentialPayIdUrl)
+export function convertUrlToPayString(
+  potentialPayStringUrl: string | URL,
+): PayString {
+  const payStringUrl = parsePayStringUrl(potentialPayStringUrl)
 
   // Remove the leading '/' from the path.
   //
-  // TODO:(hbergren) If PayID Discovery becomes real,
-  // this might need to make a fetch() request to determine how to parse the PayID URL.
-  const user = payIdUrl.pathname.slice(1)
+  // TODO:(hbergren) If PayString Discovery becomes real,
+  // this might need to make a fetch() request to determine how to parse the PayString URL.
+  const user = payStringUrl.pathname.slice(1)
 
-  const payId = `${user}$${payIdUrl.hostname}`
+  const payString = `${user}$${payStringUrl.hostname}`
 
-  return parsePayId(payId)
+  return parsePayString(payString)
 }

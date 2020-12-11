@@ -1,57 +1,55 @@
-# `@payid-org/utils`
+# `@paystring/utils`
 
-![NPM version badge](https://img.shields.io/npm/v/@payid-org/utils)
+![NPM version badge](https://img.shields.io/npm/v/@paystring/utils)
 
-A TypeScript library providing PayID utility functions.
-
-_This project is not associated with PayID operated by NPP Australia Ltd. People in Australia are prohibited from using this project. See below for more details._
+A TypeScript library providing PayString utility functions.
 
 ## Usage
 
-This library was designed to solve various pain points when implementing a PayID client or server.
+This library was designed to solve various pain points when implementing a PayString client or server.
 
 ```ts
-import * as utils from '@payid-org/utils'
+import * as utils from '@paystring/utils'
 
-const payId = 'alice$example.com'
+const payString = 'alice$example.com'
 
-const payIdUrl = utils.convertPayIdToUrl(payId)
+const payStringUrl = utils.convertPayStringToUrl(payString)
 
-console.log(payIdUrl) // Logs 'example.com/alice'
+console.log(payStringUrl) // Logs 'example.com/alice'
 ```
 
-### `parsePayId()`
+### `parsePayString()`
 
-Given an arbitrary input, return a string typed as a `PayId` if it is a valid PayID, and throw an error otherwise.
+Given an arbitrary input, return a string typed as a `PayString` if it is a valid PayString, and throw an error otherwise.
 
-### `parsePayIdUrl()`
+### `parsePayStringUrl()`
 
-Given an arbitrary input, return a Node.js URL objet typed as a `PayIdUrl` if it is a valid PayID URL, and throw an error otherwise.
+Given an arbitrary input, return a Node.js URL objet typed as a `PayStringUrl` if it is a valid PayString URL, and throw an error otherwise.
 
-### `convertPayIdToUrl()`
+### `convertPayStringToUrl()`
 
-Given an arbitrary string, return a PayID URL if the string was a valid PayID, and throw an error otherwise.
+Given an arbitrary string, return a PayString URL if the string was a valid PayString, and throw an error otherwise.
 
-### `convertUrlToPayId()`
+### `convertUrlToPayString()`
 
-Given an arbitrary Node.js URL object or a string, return a PayID if the input was a valid PayID URL, and throw an error otherwise.
+Given an arbitrary Node.js URL object or a string, return a PayString if the input was a valid PayString URL, and throw an error otherwise.
 
-### `splitPayIdString()`
+### `splitPayString()`
 
-Given an arbitrary string, return the tuple of `[user, host]` of the PayID string.
+Given an arbitrary string, return the tuple of `[user, host]` of the PayString string.
 
 ```ts
-const payId = 'alice$example.com'
+const payString = 'alice$example.com'
 
-splitPayIdString(payId)
+splitPayString(payString)
 // Returns ['alice', 'example.com']
 ```
 
-## V.PayID
+## V.PayString
 
-The [V.PayID RFC](https://github.com/payid-org/rfcs/blob/master/src/spec/self-sov-verifiable-payid-protocol.md]) defines
-a method for signing and verifying PayID address mappings using cryptographic keys. The utils library provides several
-functions related to V.PayID.
+The [V.PayString RFC](https://github.com/PayString/rfcs/blob/master/src/spec/self-sov-verifiable-payid-protocol.md]) defines
+a method for signing and verifying PayString address mappings using cryptographic keys. The utils library provides several
+functions related to V.PayString.
 
 ### `generateNewKey()`
 
@@ -67,24 +65,24 @@ JWS format.
 Verifies the signatures on `verifiedAddresses` in the provided `paymentInfo' object. Returns true if signatures
 are valid, false if any are invalid.
 
-### `verifySignedAddress(payId, verifiedAddress)`
+### `verifySignedAddress(payString, verifiedAddress)`
 
-Verifies that the signature on a specific `verifiedAddress` matches its PayID and embedded public key.
+Verifies that the signature on a specific `verifiedAddress` matches its PayString and embedded public key.
 
 ### `getJwkFromRecipient(signer)`
 
 Gets the public JWK from a JWS recipient/signer on a verified address.
 
-#### V.PayID Example
+#### V.PayString Example
 
 The following shows a complete example of using the utils library to generate a key, sign an address mapping
 and construct a payment info object containing the verified/signed address, and lastly verifying the signature
-of a signed PayId address.
+of a signed PayString address.
 
 ```ts
-import * as utils from '@payid-org/utils'
+import * as utils from '@paystring/utils'
 
-const payId = 'alice$payid.example'
+const payString = 'alice$payString.example'
 const address = {
   environment: 'TESTNET',
   paymentNetwork: 'XRPL',
@@ -102,23 +100,23 @@ const signingParameters = new utils.IdentityKeySigningParams(
 )
 
 // generate a signed/verified address using the signing key
-const verifiedAddress = utils.sign(payId, address, signingParameters)
+const verifiedAddress = utils.sign(payString, address, signingParameters)
 
 // build a PaymentInfo containing a verified address
 const paymentInfo = {
-  payId,
+  payString,
   verifiedAddresses: [verifiedAddress],
 }
 
 // pretty print the JSON representation.
-// this is what the PayID server should return for PayID lookups.
+// this is what the PayString server should return for PayString lookups.
 console.log(JSON.stringify(paymentInfo, null, 2))
 
 // verify signatures on all the verifiedAddresses in a PaymentInfo object.
-utils.verifyPayId(paymentInfo)
+utils.verifyPayString(paymentInfo)
 
 // verify a specific verifiedAddress
-utils.verifySignedAddress(payId, paymentInfo.verifiedAddresses[0])
+utils.verifySignedAddress(payString, paymentInfo.verifiedAddresses[0])
 
 // inspect the PaymentInfo for detail information on signatures
 const inspector = new utils.PaymentInformationInspector()
@@ -130,7 +128,7 @@ utils.getJwkFromRecipient(paymentInfo.verifiedAddresses[0].signatures[0])
 
 ## Legal
 
-By using, reproducing, or distributing this code, you agree to the terms and conditions for use (including the Limitation of Liability) in the [Apache License 2.0](https://github.com/payid-org/payid/blob/master/LICENSE). If you do not agree, you may not use, reproduce, or distribute the code. **This code is not authorised for download in Australia. Any persons located in Australia are expressly prohibited from downloading, using, reproducing or distributing the code.** This code is not owned by, or associated with, NPP Australia Limited, and has no sponsorship, affiliation or other connection with the “Pay ID” service operated by NPP Australia Limited in Australia.
+By using, reproducing, or distributing this code, you agree to the terms and conditions for use (including the Limitation of Liability) in the [Apache License 2.0](https://github.com/PayString/payString/blob/master/LICENSE). If you do not agree, you may not use, reproduce, or distribute the code. **This code is not authorised for download in Australia. Any persons located in Australia are expressly prohibited from downloading, using, reproducing or distributing the code.**
 
 ```
 

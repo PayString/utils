@@ -8,17 +8,17 @@ import IdentityKeySigningParams from '../../../src/verifiable/identity-key-signi
 import {
   sign,
   signWithKeys,
-  verifyPayId,
+  verifyPayString,
   verifySignedAddress,
 } from '../../../src/verifiable/signatures'
 import {
   Address,
   AddressDetailsType,
   CryptoAddressDetails,
-} from '../../../src/verifiable/verifiable-payid'
+} from '../../../src/verifiable/verifiable-paystring'
 
 describe('sign()', function () {
-  const payId = 'alice$payid.example'
+  const payString = 'alice$payString.example'
   const xrpAddress = 'rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6'
   const addressDetails: CryptoAddressDetails = {
     address: xrpAddress,
@@ -35,23 +35,23 @@ describe('sign()', function () {
     }
   })
 
-  it('Signed PayID returns JWS', async function () {
+  it('Signed PayString returns JWS', async function () {
     const key = await generateNewKey()
     const params = new IdentityKeySigningParams(key, defaultAlgorithm(key))
-    const jws = sign(payId, address, params)
+    const jws = sign(payString, address, params)
 
     const expectedPayload =
-      '{"payId":"alice$payid.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
+      '{"payId":"alice$payString.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
 
     assert.equal(jws.payload, expectedPayload)
     assert.equal(jws.signatures.length, 1)
-    assert.isTrue(verifySignedAddress(payId, jws))
+    assert.isTrue(verifySignedAddress(payString, jws))
   })
 
   it('signs and verifies with using multiple signatures', async function () {
     const identityKey1 = await generateNewKey()
     const identityKey2 = await generateNewKey()
-    const jws = signWithKeys(payId, address, [
+    const jws = signWithKeys(payString, address, [
       new IdentityKeySigningParams(
         identityKey1,
         defaultAlgorithm(identityKey1),
@@ -63,35 +63,35 @@ describe('sign()', function () {
     ])
 
     const expectedPayload =
-      '{"payId":"alice$payid.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
+      '{"payId":"alice$payString.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
 
     assert.equal(jws.payload, expectedPayload)
     assert.equal(jws.signatures.length, 2)
-    assert.isTrue(verifySignedAddress(payId, jws))
+    assert.isTrue(verifySignedAddress(payString, jws))
   })
 
   it('cannot be verified if payload tampered with', async function () {
     const key = await generateNewKey()
     const jws = sign(
-      payId,
+      payString,
       address,
       new IdentityKeySigningParams(key, defaultAlgorithm(key)),
     )
     jws.payload = jws.payload.replace(xrpAddress, 'hackedXrpAdddress')
-    assert.isFalse(verifySignedAddress(payId, jws))
+    assert.isFalse(verifySignedAddress(payString, jws))
   })
 
-  it('verification fails if payid does not match payload', async function () {
+  it('verification fails if payString does not match payload', async function () {
     const key = await generateNewKey()
     const jws = sign(
-      payId,
+      payString,
       address,
       new IdentityKeySigningParams(key, defaultAlgorithm(key)),
     )
-    assert.isFalse(verifySignedAddress('hacked$payid.example', jws))
+    assert.isFalse(verifySignedAddress('hacked$payString.example', jws))
   })
 
-  it('PayID with verifiedAddresses can be verified if valid', async function () {
+  it('PayString with verifiedAddresses can be verified if valid', async function () {
     const json = `    
 {
   "payId": "alice$foo",
@@ -108,7 +108,7 @@ describe('sign()', function () {
     }
   ]  
 }`
-    assert.isTrue(verifyPayId(json))
+    assert.isTrue(verifyPayString(json))
   })
 
   /**

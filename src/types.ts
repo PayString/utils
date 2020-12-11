@@ -1,15 +1,15 @@
-declare const isValidPayId: unique symbol
+declare const isValidPayString: unique symbol
 
 /**
- * A type alias for a string that has been verified as a valid PayID.
+ * A type alias for a string that has been verified as a valid PayString.
  */
-export type PayId = string & {
-  [isValidPayId]: true
+export type PayString = string & {
+  [isValidPayString]: true
 }
 
 /**
- * A type alias for a URL that has been verified as a valid PayID URL.
+ * A type alias for a URL that has been verified as a valid PayString URL.
  */
-export type PayIdUrl = URL & {
-  [isValidPayId]: true
+export type PayStringUrl = URL & {
+  [isValidPayString]: true
 }

@@ -3,57 +3,57 @@
  * to illustrate that things have been successfully parsed.
  */
 
-import { splitPayIdString } from './helpers'
-import type { PayId, PayIdUrl } from './types'
+import { splitPayString } from './helpers'
+import type { PayString, PayStringUrl } from './types'
 
-declare const isValidPayId: unique symbol
+declare const isValidPayString: unique symbol
 
 /**
- * Parse an unknown value to a PayID.
+ * Parse an unknown value to a PayString.
  *
- * @param input - An input which may or may not be a valid PayID.
+ * @param input - An input which may or may not be a valid PayString.
  *
- * @returns A valid PayID string typed as a PayId.
+ * @returns A valid PayString string typed as a PayString.
  *
- * @throws An error if the input is an invalid PayID.
+ * @throws An error if the input is an invalid PayString.
  */
-export function parsePayId(input: unknown): PayId {
+export function parsePayString(input: unknown): PayString {
   if (typeof input !== 'string') {
-    throw new Error('PayIDs must be a string.')
+    throw new Error('PayStrings must be a string.')
   }
 
-  const [user, host] = splitPayIdString(input)
+  const [user, host] = splitPayString(input)
 
   if (user.includes('/') || host.includes('/')) {
-    throw new Error('A PayID string representation cannot include paths.')
+    throw new Error('A PayString string representation cannot include paths.')
   }
 
-  // Throws an error if this would be an invalid PayID URL
-  parsePayIdUrl(`https://${host}/${user}`)
+  // Throws an error if this would be an invalid PayString URL
+  parsePayStringUrl(`https://${host}/${user}`)
 
-  // PayIDs are canonically all lowercase
-  return input.toLowerCase() as PayId
+  // PayStrings are canonically all lowercase
+  return input.toLowerCase() as PayString
 }
 
 /**
- * Parse the URL to see if it can be converted to a PayID.
+ * Parse the URL to see if it can be converted to a PayString.
  *
- * @param input - The URL string to be converted to a PayID URL.
+ * @param input - The URL string to be converted to a PayString URL.
  *
  * @returns A URL object.
  *
- * @throws A custom ParseError when the PayID URL is invalid.
+ * @throws A custom ParseError when the PayString URL is invalid.
  */
-export function parsePayIdUrl(input: unknown): PayIdUrl {
+export function parsePayStringUrl(input: unknown): PayStringUrl {
   if (typeof input !== 'string' && !(input instanceof URL)) {
-    throw new Error('PayID URLs must be either URL strings or URL objects.')
+    throw new Error('PayString URLs must be either URL strings or URL objects.')
   }
   const url = input instanceof URL ? input : new URL(input)
 
   // Make sure the protocol isn't something wild like an FTP request
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     throw new Error(
-      `Invalid URL protocol: "${url.protocol}". PayID URLs must be HTTP/HTTPS.`,
+      `Invalid URL protocol: "${url.protocol}". PayString URLs must be HTTP/HTTPS.`,
     )
   }
 
@@ -64,5 +64,5 @@ export function parsePayIdUrl(input: unknown): PayIdUrl {
     )
   }
 
-  return url as PayIdUrl
+  return url as PayStringUrl
 }
