@@ -2,7 +2,7 @@ import 'mocha'
 
 import { assert } from 'chai'
 
-import { generateNewKey, toPublicJWK } from '../../../src/verifiable/keys'
+import { generateNewKey, toPublicJWK } from '../../../src/verifiable'
 
 describe('toPublicJWK()', function () {
   it('removes private key from JWK', async function () {

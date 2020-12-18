@@ -15,7 +15,7 @@ import {
   PaymentInformation,
   UnsignedVerifiedAddress,
   VerifiedAddress,
-  // eslint-disable-next-line import/max-dependencies -- TODO break out signature and verification
+  // eslint-disable-next-line import/max-dependencies -- TODO fix by breaking verification out into a separate file
 } from './verifiable-paystring'
 
 // Properties that are included in the 'crit' section of the JWS protected header
@@ -23,6 +23,15 @@ const CRIT_OPTIONS = {
   b64: true,
   name: false,
 }
+
+const STATIC_PROTECTED_HEADERS = {
+  name: 'identityKey',
+  typ: 'JOSE+JSON',
+  b64: false,
+  crit: ['b64', 'name'],
+}
+
+const ENCODER = new TextEncoder()
 
 /**
  * Creates a signed JWS.
@@ -57,20 +66,13 @@ export async function signWithKeys(
     payId: payString,
     payIdAddress: address,
   }
-  const encoder = new TextEncoder()
   const payload = JSON.stringify(unsigned)
-  const signer = new GeneralSign(encoder.encode(payload))
-
+  const signer = new GeneralSign(ENCODER.encode(payload))
   const signers = signingParamsArray.map(async (signingParams) => {
-    const jwk = toPublicJWK(signingParams.key)
     const protectedHeaders = {
-      name: 'identityKey',
+      ...STATIC_PROTECTED_HEADERS,
       alg: signingParams.alg,
-      typ: 'JOSE+JSON',
-      b64: false,
-      test: 'hello',
-      crit: ['b64', 'name'],
-      jwk,
+      jwk: toPublicJWK(signingParams.key),
     }
     return parseJWK(signingParams.key).then((keyLike) => {
       signer
@@ -137,7 +139,6 @@ export async function verifySignedAddress(
     return false
   }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JOSE gives back this type
     const converted = {
       ...(await convertToGeneralJWSInput(verifiedAddress)),
       payload: verifiedAddress.payload,

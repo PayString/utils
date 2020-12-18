@@ -36,16 +36,11 @@ export function convertGeneralJwsToVerifiedAddress(
 ): VerifiedAddress {
   return {
     payload,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access -- JOSE uses any here
     signatures: jws.signatures.map((recipient) => {
       return {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JOSE uses any here
         protected:
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- JOSE uses any here
           typeof recipient.protected === 'string' ? recipient.protected : '',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JOSE uses any here
         signature:
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- JOSE uses any here
           typeof recipient.signature === 'string' ? recipient.signature : '',
       }
     }),

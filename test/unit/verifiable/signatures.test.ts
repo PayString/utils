@@ -1,12 +1,8 @@
 import 'mocha'
 
 import { assert } from 'chai'
-import { JWK } from 'jose/webcrypto/types'
 
-import {
-  generateNewKey,
-  getDefaultAlgorithm,
-} from '../../../src/verifiable'
+import { generateNewKey, getDefaultAlgorithm } from '../../../src/verifiable'
 import IdentityKeySigningParams from '../../../src/verifiable/identity-key-signing-params'
 import {
   sign,
@@ -40,7 +36,7 @@ describe('sign()', function () {
 
   it('Signed PayString returns JWS', async function () {
     const key = await generateNewKey()
-    const params = new IdentityKeySigningParams(key, defaultAlgorithm(key))
+    const params = new IdentityKeySigningParams(key, getDefaultAlgorithm(key))
     const jws = await sign(payString, address, params)
     const expectedPayload =
       '{"payId":"alice$payString.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
@@ -56,11 +52,11 @@ describe('sign()', function () {
     const jws = await signWithKeys(payString, address, [
       new IdentityKeySigningParams(
         identityKey1,
-        defaultAlgorithm(identityKey1),
+        getDefaultAlgorithm(identityKey1),
       ),
       new IdentityKeySigningParams(
         identityKey2,
-        defaultAlgorithm(identityKey2),
+        getDefaultAlgorithm(identityKey2),
       ),
     ])
 
@@ -77,7 +73,7 @@ describe('sign()', function () {
     const jws = await sign(
       payString,
       address,
-      new IdentityKeySigningParams(key, defaultAlgorithm(key)),
+      new IdentityKeySigningParams(key, getDefaultAlgorithm(key)),
     )
     const mutatedJws = {
       payload: jws.payload.replace(xrpAddress, 'hackedXrpAdddress'),
@@ -91,7 +87,7 @@ describe('sign()', function () {
     const jws = await sign(
       payString,
       address,
-      new IdentityKeySigningParams(key, defaultAlgorithm(key)),
+      new IdentityKeySigningParams(key, getDefaultAlgorithm(key)),
     )
     assert.isFalse(await verifySignedAddress('hacked$payString.example', jws))
   })
@@ -115,14 +111,4 @@ describe('sign()', function () {
 }`
     assert.isTrue(await verifyPayString(json))
   })
-
-  /**
-   * Gets the default algorithm for a ECKey.
-   *
-   * @param key - The key.
-   * @returns The default algorithm to use.
-   */
-  function defaultAlgorithm(key: JWK): string {
-    return getDefaultAlgorithm(key)
-  }
 })

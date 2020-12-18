@@ -2,7 +2,7 @@ import 'mocha'
 
 import { assert } from 'chai'
 
-import { generateNewKey } from '../../../src/verifiable/keys'
+import { generateNewKey } from '../../../src/verifiable'
 
 describe('generateNewKey()', function () {
   it('generates an EC key', async function () {
