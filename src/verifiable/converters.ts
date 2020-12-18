@@ -3,7 +3,6 @@ import { GeneralJWSInput, GeneralJWS } from 'jose/webcrypto/types'
 import {
   Address,
   PaymentInformation,
-  UnsignedVerifiedAddress,
   VerifiedAddress,
 } from './verifiable-paystring'
 
@@ -45,21 +44,6 @@ export function convertGeneralJwsToVerifiedAddress(
       }
     }),
   }
-}
-
-/**
- * Converts JSON to an Unsigned Verified Address.
- *
- * @param json - The json to convert.
- * @returns The address.
- * @throws Error if the json does not have the required properties.
- */
-export function convertToUnsignedVerifiedAddress(
-  json: string,
-): UnsignedVerifiedAddress {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
-  const { address }: { address: UnsignedVerifiedAddress } = JSON.parse(json)
-  return address
 }
 
 /**
