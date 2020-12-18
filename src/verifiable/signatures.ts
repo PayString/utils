@@ -1,13 +1,28 @@
-import { JWS, JWK } from 'jose'
+import EmbeddedJWK from 'jose/jwk/embedded'
+import parseJWK from 'jose/jwk/parse'
+import GeneralSign from 'jose/jws/general/sign'
+import generalVerify from 'jose/jws/general/verify'
 
+import {
+  convertGeneralJwsToVerifiedAddress,
+  convertToGeneralJWSInput,
+  convertToVerifiedAddress,
+} from './converters'
 import IdentityKeySigningParams from './identity-key-signing-params'
+import { toPublicJWK } from './keys'
 import {
   Address,
   PaymentInformation,
   UnsignedVerifiedAddress,
+  VerifiedAddress,
+  // eslint-disable-next-line import/max-dependencies -- TODO break out signature and verification
 } from './verifiable-paystring'
 
-import GeneralJWS = JWS.GeneralJWS
+// Properties that are included in the 'crit' section of the JWS protected header
+const CRIT_OPTIONS = {
+  b64: true,
+  name: false,
+}
 
 /**
  * Creates a signed JWS.
@@ -17,30 +32,12 @@ import GeneralJWS = JWS.GeneralJWS
  * @param signingParams - The key/alg to use to generate the signature.
  * @returns A signed JWS.
  */
-export function sign(
+export async function sign(
   payString: string,
   address: Address,
   signingParams: IdentityKeySigningParams,
-): GeneralJWS {
-  const unsigned: UnsignedVerifiedAddress = {
-    payId: payString,
-    payIdAddress: address,
-  }
-
-  const signer = new JWS.Sign(unsigned)
-  const jwk = signingParams.key.toJWK(false)
-
-  const protectedHeaders = {
-    name: 'identityKey',
-    alg: signingParams.alg,
-    typ: 'JOSE+JSON',
-    b64: false,
-    crit: ['b64', 'name'],
-    jwk,
-  }
-
-  signer.recipient(signingParams.key, protectedHeaders)
-  return signer.sign('general')
+): Promise<VerifiedAddress> {
+  return signWithKeys(payString, address, [signingParams])
 }
 
 /**
@@ -48,25 +45,44 @@ export function sign(
  *
  * @param payString - The payString that owns this verified address.
  * @param address - The address to sign.
- * @param signingParams - The list of key/alg to use to generate the signature.
+ * @param signingParamsArray - The list of key/alg to use to generate the signature.
  * @returns A signed JWS.
  */
-export function signWithKeys(
+export async function signWithKeys(
   payString: string,
   address: Address,
-  signingParams: IdentityKeySigningParams[],
-): GeneralJWS {
-  // There seems to be a bug with the JOSE library when dealing with multiple signatures + unencoded payloads.
-  // It should be possible to pass multiple keys during signing, but the payload gets garbled due to a bug in jose.
-  // The workaround here is to sign the payload once per key, and then collect all the signatures into one response.
-  return signingParams
-    .map((param) => sign(payString, address, param))
-    .reduce(function mergeJWS(current, next): GeneralJWS {
-      return {
-        payload: current.payload,
-        signatures: current.signatures.concat(next.signatures),
-      }
+  signingParamsArray: IdentityKeySigningParams[],
+): Promise<VerifiedAddress> {
+  const unsigned: UnsignedVerifiedAddress = {
+    payId: payString,
+    payIdAddress: address,
+  }
+  const encoder = new TextEncoder()
+  const payload = JSON.stringify(unsigned)
+  const signer = new GeneralSign(encoder.encode(payload))
+
+  const signers = signingParamsArray.map(async (signingParams) => {
+    const jwk = toPublicJWK(signingParams.key)
+    const protectedHeaders = {
+      name: 'identityKey',
+      alg: signingParams.alg,
+      typ: 'JOSE+JSON',
+      b64: false,
+      test: 'hello',
+      crit: ['b64', 'name'],
+      jwk,
+    }
+    return parseJWK(signingParams.key).then((keyLike) => {
+      signer
+        .addSignature(keyLike, { crit: CRIT_OPTIONS })
+        .setProtectedHeader(protectedHeaders)
     })
+  })
+  return Promise.all(signers).then(async () =>
+    signer.sign().then((jws) => {
+      return convertGeneralJwsToVerifiedAddress(payload, jws)
+    }),
+  )
 }
 
 /**
@@ -76,23 +92,25 @@ export function signWithKeys(
  *
  * @returns True if verified.
  */
-export function verifyPayString(
+export async function verifyPayString(
   toVerify: string | PaymentInformation,
-): boolean {
+): Promise<boolean> {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
   const paymentInformation: PaymentInformation =
     typeof toVerify === 'string' ? JSON.parse(toVerify) : toVerify
 
   const payString = paymentInformation.payId
   if (payString) {
-    return paymentInformation.verifiedAddresses
-      .map((address) =>
+    const verifications = paymentInformation.verifiedAddresses.map(
+      async (address) =>
         verifySignedAddress(payString, {
           payload: address.payload,
           signatures: address.signatures.slice(),
         }),
-      )
-      .every((value) => value)
+    )
+    return Promise.all(verifications).then((values) =>
+      values.every((value) => value),
+    )
   }
   return false
 }
@@ -101,29 +119,30 @@ export function verifyPayString(
  * Verify an address is properly signed.
  *
  * @param expectedPayString - The expected payString.
- * @param verifiedAddress - JWS representing a verified address.
+ * @param verifiedAddressOrJson - JWS representing a verified address.
  * @returns Returns true if any signature is invalid, returns false. Otherwise true.
  */
-export function verifySignedAddress(
+export async function verifySignedAddress(
   expectedPayString: string,
-  verifiedAddress: GeneralJWS | string,
-): boolean {
+  verifiedAddressOrJson: VerifiedAddress | string,
+): Promise<boolean> {
+  const verifiedAddress: VerifiedAddress =
+    typeof verifiedAddressOrJson === 'string'
+      ? convertToVerifiedAddress(verifiedAddressOrJson)
+      : verifiedAddressOrJson
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
-  const jws: GeneralJWS =
-    typeof verifiedAddress === 'string'
-      ? JSON.parse(verifiedAddress)
-      : verifiedAddress
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
-  const address: UnsignedVerifiedAddress = JSON.parse(jws.payload)
+  const address: UnsignedVerifiedAddress = JSON.parse(verifiedAddress.payload)
   if (expectedPayString !== address.payId) {
     // payString does not match what was inside the signed payload
     return false
   }
   try {
-    JWS.verify(jws, JWK.EmbeddedJWK, {
-      crit: ['b64', 'name'],
-      complete: true,
-    })
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JOSE gives back this type
+    const converted = {
+      ...(await convertToGeneralJWSInput(verifiedAddress)),
+      payload: verifiedAddress.payload,
+    }
+    await generalVerify(converted, EmbeddedJWK, { crit: CRIT_OPTIONS })
     return true
   } catch {
     return false

@@ -1,12 +1,7 @@
 /**
  * Type of payment address in PaymentInformation.
  */
-import { JWK, JWKECKey, JWKOctKey, JWKOKPKey, JWKRSAKey } from 'jose'
-
-import ECKey = JWK.ECKey
-import RSAKey = JWK.RSAKey
-import OctKey = JWK.OctKey
-import OKPKey = JWK.OKPKey
+import { JWK } from 'jose/webcrypto/types'
 
 // TODO:(@nhartner) pull most these types from an external PayString types library once it exists
 export enum AddressDetailsType {
@@ -76,7 +71,7 @@ export interface UnsignedVerifiedAddress {
 }
 
 export interface SigningParams {
-  readonly key: ECKey | RSAKey | OctKey | OKPKey
+  readonly key: JWK
   readonly alg: string
   keyType: string
 }
@@ -87,5 +82,5 @@ export interface ProtectedHeaders {
   typ: 'JOSE+JSON'
   b64: false
   crit: ['b64', 'name']
-  jwk: JWKECKey | JWKRSAKey | JWKOKPKey | JWKOctKey
+  jwk: JWK
 }

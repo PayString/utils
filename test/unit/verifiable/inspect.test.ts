@@ -21,7 +21,7 @@ describe('inspects()', function () {
     const info = await loadInfoFromFile(
       'test/unit/verifiable/signed-paystring.json',
     )
-    const result = inspector.inspect(info)
+    const result = await inspector.inspect(info)
     assert.isTrue(result.isVerified)
     assert.lengthOf(result.verifiedAddressesResults, 1)
     assert.lengthOf(result.verifiedAddressesResults[0].signaturesResults, 2)
