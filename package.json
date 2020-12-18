@@ -19,7 +19,6 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc --project .",
-    "clean": "tsc --build --clean",
     "lint": "eslint . --ext .ts --fix --max-warnings 0 && prettier --write '**/*.{md,json}'",
     "lintNoFix": "eslint . --ext .ts --max-warnings 0 && prettier --check '**/*.{md,json}'",
     "prepare": "npm run build",
@@ -39,7 +38,6 @@
     "@xpring-eng/eslint-config-base": "^0.11.0",
     "@xpring-eng/eslint-config-mocha": "^1.0.0",
     "chai": "^4.2.0",
-    "check-imports": "^0.1.12",
     "eslint": "^7.5.0",
     "eslint-plugin-array-func": "^3.1.6",
     "eslint-plugin-eslint-comments": "^3.2.0",
