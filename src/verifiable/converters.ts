@@ -36,11 +36,12 @@ export function convertGeneralJwsToVerifiedAddress(
   return {
     payload,
     signatures: jws.signatures.map((recipient) => {
+      if (recipient.protected === undefined) {
+        throw new Error('missing protected property')
+      }
       return {
-        protected:
-          typeof recipient.protected === 'string' ? recipient.protected : '',
-        signature:
-          typeof recipient.signature === 'string' ? recipient.signature : '',
+        protected: recipient.protected,
+        signature: recipient.signature,
       }
     }),
   }
