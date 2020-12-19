@@ -55,8 +55,8 @@ export function convertGeneralJwsToVerifiedAddress(
  */
 export function convertJsonToAddress(json: string): Address {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
-  const { payStringAddress }: { payStringAddress: Address } = JSON.parse(json)
-  return payStringAddress
+  const { payIdAddress }: { payIdAddress: Address } = JSON.parse(json)
+  return payIdAddress
 }
 
 /**
