@@ -1,7 +1,6 @@
 import 'mocha'
 
 import { assert } from 'chai'
-import { JWK } from 'jose'
 
 import { generateNewKey, getDefaultAlgorithm } from '../../../src/verifiable'
 import IdentityKeySigningParams from '../../../src/verifiable/identity-key-signing-params'
@@ -37,28 +36,27 @@ describe('sign()', function () {
 
   it('Signed PayString returns JWS', async function () {
     const key = await generateNewKey()
-    const params = new IdentityKeySigningParams(key, defaultAlgorithm(key))
-    const jws = sign(payString, address, params)
-
+    const params = new IdentityKeySigningParams(key, getDefaultAlgorithm(key))
+    const jws = await sign(payString, address, params)
     const expectedPayload =
       '{"payId":"alice$payString.example","payIdAddress":{"environment":"TESTNET","paymentNetwork":"XRPL","addressDetailsType":"CryptoAddressDetails","addressDetails":{"address":"rP3t3JStqWPYd8H88WfBYh3v84qqYzbHQ6"}}}'
 
     assert.equal(jws.payload, expectedPayload)
     assert.equal(jws.signatures.length, 1)
-    assert.isTrue(verifySignedAddress(payString, jws))
+    assert.isTrue(await verifySignedAddress(payString, jws))
   })
 
   it('signs and verifies with using multiple signatures', async function () {
     const identityKey1 = await generateNewKey()
     const identityKey2 = await generateNewKey()
-    const jws = signWithKeys(payString, address, [
+    const jws = await signWithKeys(payString, address, [
       new IdentityKeySigningParams(
         identityKey1,
-        defaultAlgorithm(identityKey1),
+        getDefaultAlgorithm(identityKey1),
       ),
       new IdentityKeySigningParams(
         identityKey2,
-        defaultAlgorithm(identityKey2),
+        getDefaultAlgorithm(identityKey2),
       ),
     ])
 
@@ -67,28 +65,31 @@ describe('sign()', function () {
 
     assert.equal(jws.payload, expectedPayload)
     assert.equal(jws.signatures.length, 2)
-    assert.isTrue(verifySignedAddress(payString, jws))
+    assert.isTrue(await verifySignedAddress(payString, jws))
   })
 
   it('cannot be verified if payload tampered with', async function () {
     const key = await generateNewKey()
-    const jws = sign(
+    const jws = await sign(
       payString,
       address,
-      new IdentityKeySigningParams(key, defaultAlgorithm(key)),
+      new IdentityKeySigningParams(key, getDefaultAlgorithm(key)),
     )
-    jws.payload = jws.payload.replace(xrpAddress, 'hackedXrpAdddress')
-    assert.isFalse(verifySignedAddress(payString, jws))
+    const mutatedJws = {
+      payload: jws.payload.replace(xrpAddress, 'hackedXrpAdddress'),
+      signatures: jws.signatures,
+    }
+    assert.isFalse(await verifySignedAddress(payString, mutatedJws))
   })
 
   it('verification fails if payString does not match payload', async function () {
     const key = await generateNewKey()
-    const jws = sign(
+    const jws = await sign(
       payString,
       address,
-      new IdentityKeySigningParams(key, defaultAlgorithm(key)),
+      new IdentityKeySigningParams(key, getDefaultAlgorithm(key)),
     )
-    assert.isFalse(verifySignedAddress('hacked$payString.example', jws))
+    assert.isFalse(await verifySignedAddress('hacked$payString.example', jws))
   })
 
   it('PayString with verifiedAddresses can be verified if valid', async function () {
@@ -108,16 +109,6 @@ describe('sign()', function () {
     }
   ]  
 }`
-    assert.isTrue(verifyPayString(json))
+    assert.isTrue(await verifyPayString(json))
   })
-
-  /**
-   * Gets the default algorithm for a ECKey.
-   *
-   * @param key - The key.
-   * @returns The default algorithm to use.
-   */
-  function defaultAlgorithm(key: JWK.ECKey): string {
-    return getDefaultAlgorithm(key.toJWK())
-  }
 })

@@ -1,6 +1,5 @@
-import { JWK, JWS } from 'jose'
+import { JWK } from 'jose/webcrypto/types'
 
-import { toKey } from './keys'
 import { verifySignedAddress } from './signatures'
 import {
   Address,
@@ -8,6 +7,7 @@ import {
   ProtectedHeaders,
   UnsignedVerifiedAddress,
   VerifiedAddress,
+  VerifiedAddressSignature,
 } from './verifiable-paystring'
 
 /**
@@ -21,24 +21,24 @@ export default class PaymentInformationInspector {
    * @returns The inspection result.
    * @throws Error - If paymentInfo is missing expected fields.
    */
-  public inspect(
+  public async inspect(
     paymentInfo: PaymentInformation,
-  ): PaymentInformationInspectionResult {
+  ): Promise<PaymentInformationInspectionResult> {
     const payString = paymentInfo.payId
     if (!payString) {
       throw new Error('payString property is empty')
     }
     const verifiedAddressesResults = paymentInfo.verifiedAddresses.map(
-      (address) => this.inspectVerifiedAddress(payString, address),
+      async (address) => this.inspectVerifiedAddress(payString, address),
     )
-    const isVerified = verifiedAddressesResults.every(
-      (result) => result.isVerified,
-    )
-    return {
-      payString,
-      isVerified,
-      verifiedAddressesResults,
-    }
+    return Promise.all(verifiedAddressesResults).then((results) => {
+      const isVerified = results.every((result) => result.isVerified)
+      return {
+        payString,
+        isVerified,
+        verifiedAddressesResults: results,
+      }
+    })
   }
 
   /**
@@ -48,13 +48,40 @@ export default class PaymentInformationInspector {
    * @param verifiedAddress - The verified address to inspect.
    * @returns The inspection result.
    */
-  private inspectVerifiedAddress(
+  private async inspectVerifiedAddress(
     payString: string,
     verifiedAddress: VerifiedAddress,
-  ): VerifiedAddressInspectionResult {
+  ): Promise<VerifiedAddressInspectionResult> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- because JSON
     const address: UnsignedVerifiedAddress = JSON.parse(verifiedAddress.payload)
-    const signaturesResults = verifiedAddress.signatures.map((recipient) => {
+    const signaturesResults = this.buildSignatureResults(
+      verifiedAddress,
+      payString,
+    )
+    return Promise.all(signaturesResults).then(
+      (results): VerifiedAddressInspectionResult => {
+        const isVerified = results.every((result) => result.isSignatureValid)
+        return {
+          isVerified,
+          address: address.payIdAddress,
+          signaturesResults: results,
+        }
+      },
+    )
+  }
+
+  /**
+   * Builds signatures results for every signature in the verified address.
+   *
+   * @param verifiedAddress - The address to inspect.
+   * @param payString - The PayString this address belongs to.
+   * @returns List of promises with inspection results.
+   */
+  private buildSignatureResults(
+    verifiedAddress: VerifiedAddress,
+    payString: string,
+  ): Array<Promise<SignatureInspectionResult>> {
+    return verifiedAddress.signatures.map(async (recipient) => {
       const jwsWithSingleSignature = {
         payload: verifiedAddress.payload,
         signatures: [
@@ -66,14 +93,6 @@ export default class PaymentInformationInspector {
       }
       return this.inspectSignature(payString, jwsWithSingleSignature, recipient)
     })
-    const isVerified = signaturesResults.every(
-      (result) => result.isSignatureValid,
-    )
-    return {
-      isVerified,
-      address: address.payIdAddress,
-      signaturesResults,
-    }
   }
 
   /**
@@ -85,11 +104,11 @@ export default class PaymentInformationInspector {
    * @returns The inspection result.
    */
   // eslint-disable-next-line class-methods-use-this -- previously referenced a class field. could be refactored.
-  private inspectSignature(
+  private async inspectSignature(
     payString: string,
-    jws: JWS.GeneralJWS,
-    recipient: JWS.JWSRecipient,
-  ): SignatureInspectionResult {
+    jws: VerifiedAddress,
+    recipient: VerifiedAddressSignature,
+  ): Promise<SignatureInspectionResult> {
     if (!recipient.protected) {
       return { isSignatureValid: false }
     }
@@ -97,9 +116,9 @@ export default class PaymentInformationInspector {
     const headers: ProtectedHeaders = JSON.parse(
       Buffer.from(recipient.protected, 'base64').toString('utf-8'),
     )
-    const jwk = toKey(headers.jwk)
-    const isSignatureValid = verifySignedAddress(payString, jws)
-    return { isSignatureValid, keyType: headers.name, jwk }
+    return verifySignedAddress(payString, jws).then((isSignatureValid) => {
+      return { isSignatureValid, keyType: headers.name, jwk: headers.jwk }
+    })
   }
 }
 
@@ -121,5 +140,5 @@ export interface SignatureInspectionResult {
   // if the signature passed verification
   readonly isSignatureValid: boolean
   readonly keyType?: string
-  readonly jwk?: JWK.RSAKey | JWK.ECKey | JWK.OKPKey | JWK.OctKey
+  readonly jwk?: JWK
 }

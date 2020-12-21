@@ -1,4 +1,4 @@
-import { JWS } from 'jose'
+import { GeneralJWSInput, GeneralJWS } from 'jose/webcrypto/types'
 
 import {
   Address,
@@ -7,27 +7,44 @@ import {
 } from './verifiable-paystring'
 
 /**
- * Converts a GeneralJWS to a Verified Address. Both have the same JWS structure but for
+ * Converts JSON to a Verified Address. Both have the same JWS structure but for
  * PayString we use our own type so as not to be coupled too tightly to the underlying JOSE library.
  *
- * @param jws - The JWS to convert.
+ * @param json - The json to convert.
  * @returns The address.
- * @throws Error if the JWS does not have the required properties.
+ * @throws Error if the json does not have the required properties.
  */
-export function convertToVerifiedAddress(jws: JWS.GeneralJWS): VerifiedAddress {
-  const verified: VerifiedAddress = {
-    payload: jws.payload,
-    signatures: jws.signatures.map((value) => {
-      if (value.protected) {
-        return {
-          protected: value.protected,
-          signature: value.signature,
-        }
+export function convertToVerifiedAddress(json: string): VerifiedAddress {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
+  const { address }: { address: VerifiedAddress } = JSON.parse(json)
+  return address
+}
+
+/**
+ * Converts JWS to a Verified Address. Both have the same JWS structure but for
+ * PayString we use our own type so as not to be coupled too tightly to the underlying JOSE library.
+ *
+ * @param payload - The payload.
+ * @param jws - The JWS signatures.
+ * @returns The address.
+ * @throws Error if the json does not have the required properties.
+ */
+export function convertGeneralJwsToVerifiedAddress(
+  payload: string,
+  jws: GeneralJWS,
+): VerifiedAddress {
+  return {
+    payload,
+    signatures: jws.signatures.map((recipient) => {
+      if (recipient.protected === undefined) {
+        throw new Error('missing protected property')
       }
-      throw Error('missing protected property')
+      return {
+        protected: recipient.protected,
+        signature: recipient.signature,
+      }
     }),
   }
-  return verified
 }
 
 /**
@@ -38,8 +55,28 @@ export function convertToVerifiedAddress(jws: JWS.GeneralJWS): VerifiedAddress {
  */
 export function convertJsonToAddress(json: string): Address {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- untyped JSON
-  const { payStringAddress }: { payStringAddress: Address } = JSON.parse(json)
-  return payStringAddress
+  const { payIdAddress }: { payIdAddress: Address } = JSON.parse(json)
+  return payIdAddress
+}
+
+/**
+ * Converts a VerifiedAddress to a JOSE GeneralJWSInput.
+ *
+ * @param verifiedAddress - Address to convert.
+ * @returns Address instance.
+ */
+export async function convertToGeneralJWSInput(
+  verifiedAddress: VerifiedAddress,
+): Promise<GeneralJWSInput> {
+  return {
+    payload: verifiedAddress.payload,
+    signatures: verifiedAddress.signatures.map((value) => {
+      return {
+        signature: value.signature,
+        protected: value.protected,
+      }
+    }),
+  }
 }
 
 /**
